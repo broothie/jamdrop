@@ -9,9 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/broothie/queuecumber/model"
-
 	"github.com/broothie/queuecumber/config"
+	"github.com/broothie/queuecumber/model"
 	"github.com/pkg/errors"
 )
 

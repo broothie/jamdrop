@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/firestore"
-
 	"github.com/broothie/queuecumber/model"
 )
 
@@ -32,6 +31,7 @@ func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 		}
 
 		fields := firestore.Merge(
+			firestore.FieldPath{"id"},
 			firestore.FieldPath{"display_name"},
 			firestore.FieldPath{"access_token"},
 			firestore.FieldPath{"refresh_token"},

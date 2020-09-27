@@ -5,11 +5,10 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/broothie/queuecumber/spotify"
-
+	"cloud.google.com/go/firestore"
 	"github.com/broothie/queuecumber/db"
-
 	"github.com/broothie/queuecumber/model"
+	"github.com/broothie/queuecumber/spotify"
 )
 
 var (
@@ -66,7 +65,7 @@ func (s *Server) AddFriend() http.HandlerFunc {
 		}
 
 		user.AddFriend(friend)
-		if err := s.DB.UpsertUser(r.Context(), user); err != nil {
+		if err := s.DB.UpsertUser(r.Context(), user, firestore.Merge(firestore.FieldPath{"friends"})); err != nil {
 			s.Logger.Println(err)
 			s.Flash(w, r, "An error occurred. Please try again.")
 			return

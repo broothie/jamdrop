@@ -5,13 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/sessions"
-
-	"github.com/broothie/queuecumber/db"
-
-	"github.com/broothie/queuecumber/spotify"
-
 	"github.com/broothie/queuecumber/app"
+	"github.com/broothie/queuecumber/db"
+	"github.com/broothie/queuecumber/spotify"
+	"github.com/gorilla/sessions"
 )
 
 type Server struct {

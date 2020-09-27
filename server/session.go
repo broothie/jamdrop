@@ -8,7 +8,6 @@ import (
 
 	"github.com/broothie/queuecumber/db"
 	"github.com/broothie/queuecumber/model"
-
 	"github.com/pkg/errors"
 )
 

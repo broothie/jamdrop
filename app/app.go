@@ -4,11 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/pkg/errors"
-
 	"github.com/broothie/queuecumber/config"
 	"github.com/broothie/queuecumber/db"
 	"github.com/broothie/queuecumber/spotify"
+	"github.com/pkg/errors"
 )
 
 type App struct {

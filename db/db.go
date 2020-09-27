@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"github.com/broothie/queuecumber/config"
-
 	"cloud.google.com/go/firestore"
+	"github.com/broothie/queuecumber/config"
 	"github.com/pkg/errors"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
