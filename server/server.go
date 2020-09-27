@@ -5,6 +5,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/sessions"
+
+	"github.com/broothie/queuecumber/db"
+
 	"github.com/broothie/queuecumber/spotify"
 
 	"github.com/broothie/queuecumber/app"
@@ -13,7 +17,9 @@ import (
 type Server struct {
 	App     *app.App
 	Logger  *log.Logger
-	Spotify *spotify.Client
+	Spotify *spotify.Spotify
+	DB      *db.DB
+	Session *sessions.CookieStore
 }
 
 func New(app *app.App) *Server {
@@ -21,6 +27,8 @@ func New(app *app.App) *Server {
 		App:     app,
 		Logger:  app.Logger,
 		Spotify: app.Spotify,
+		DB:      app.DB,
+		Session: sessions.NewCookieStore([]byte(app.Config.SecretKey)),
 	}
 }
 
@@ -35,4 +43,9 @@ func (s *Server) Run() {
 
 func (s *Server) Handler() http.Handler {
 	return ApplyLoggerMiddleware(s.Routes(), s.Logger)
+}
+
+func (s *Server) Error(w http.ResponseWriter, error string, code int) {
+	s.Logger.Println(error)
+	http.Error(w, error, code)
 }

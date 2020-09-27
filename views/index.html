@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>queuecumber</title>
+</head>
+<body>
+    <div>
+        {{ range $flash := .Flashes }}
+            <div><p>{{ $flash }}</p></div>
+        {{ end }}
+    </div>
+
+    <p>Hello {{ .User.DisplayName }}!</p>
+
+    <form action="/users/friends">
+{{/*        <input type="text" disabled value="spotify:user:r3yf35u8j50l5kfp0a9kl2tf2">*/}}
+        <input type="text" placeholder="user id, uri, or link " name="user_identifier"/>
+        <button type="submit">Add Friend</button>
+    </form>
+
+    <div>
+        {{ range $friend := .User.Friends }}
+            <div>
+                {{ $friend.DisplayName }}
+                <form action="/users/friends/queue">
+                    <input type="hidden" name="user_id" value="{{ $friend.ID }}"/>
+{{/*                    <input type="text" disabled value="spotify:track:7GhIk7Il098yCjg4BQjzvb">*/}}
+                    <input type="text" placeholder="song id, uri, or link" name="song_identifier"/>
+                    <button type="submit">Queue Song</button>
+                </form>
+            </div>
+        {{ end }}
+    </div>
+</body>
+</html>

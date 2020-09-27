@@ -4,10 +4,21 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/securecookie"
+)
+
+type Environment string
+
+const (
+	EnvTest        Environment = "test"
+	EnvDevelopment Environment = "development"
+	EnvProduction  Environment = "production"
 )
 
 type Config struct {
-	Environment string
+	Environment Environment
+	SecretKey   string
 
 	// HTTP
 	IsNgrok  bool
@@ -22,11 +33,12 @@ type Config struct {
 
 func New() *Config {
 	c := &Config{}
-	c.Environment = env("APP_ENV", "development")
+	c.Environment = Environment(env("APP_ENV", "development"))
+	c.SecretKey = env("SECRET_KEY", string(securecookie.GenerateRandomKey(32)))
 
 	// HTTP
 	c.IsNgrok = env("NGROK", "false") == "true"
-	c.Protocol = c.devProd(c.devNgrok("http", "https"), "https")
+	c.Protocol = c.devProd(c.devNgrok("http", "https"), "https").(string)
 	c.Host = env("HOST", "localhost")
 
 	var err error
@@ -41,19 +53,31 @@ func New() *Config {
 	return c
 }
 
+func (c *Config) IsTest() bool {
+	return c.Environment == EnvTest
+}
+
+func (c *Config) IsDevelopment() bool {
+	return c.Environment == EnvDevelopment
+}
+
+func (c *Config) IsProduction() bool {
+	return c.Environment == EnvProduction
+}
+
 func (c *Config) BaseURL() string {
 	return fmt.Sprintf("%s://%s%s", c.Protocol, c.Host, c.devProd(c.devNgrok(fmt.Sprintf(":%d", c.Port), ""), ""))
 }
 
-func (c *Config) devProd(dev, prod string) string {
-	if c.Environment == "production" {
+func (c *Config) devProd(dev, prod interface{}) interface{} {
+	if c.IsProduction() {
 		return prod
 	}
 
 	return dev
 }
 
-func (c *Config) devNgrok(dev, ngrok string) string {
+func (c *Config) devNgrok(dev, ngrok interface{}) interface{} {
 	if c.IsNgrok {
 		return ngrok
 	}
