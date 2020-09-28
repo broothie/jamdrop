@@ -12,23 +12,23 @@
             height: 100%;
         }
 
-        .followees {
+        .followers {
             display: flex;
             flex-direction: row;
         }
 
-        .followee {
+        .follower {
             border: 1px solid gray;
             border-radius: 10px;
             padding: 30px;
             margin: 10px;
         }
 
-        .followee.dragover {
+        .follower.dragover {
             border: 1px solid black;
         }
 
-        .followee img {
+        .follower img {
             width: 100px;
             height: 100px;
         }
@@ -52,19 +52,19 @@
     </form>
 
     <h2>Queues</h2>
-    <div class="followees">
-        {{ range $followee := .Followees }}
-            <div id="{{ $followee.ID }}"
-                 class="followee"
-                 ondrop="dropHandler({{ $followee.ID }})(event)"
-                 ondragover="dragOverHandler({{ $followee.ID }})(event)"
-                 ondragleave="dragLeaveHandler({{ $followee.ID }})(event)"
+    <div class="followers">
+        {{ range $follower := .Followers }}
+            <div id="{{ $follower.ID }}"
+                 class="follower"
+                 ondrop="dropHandler({{ $follower.ID }})(event)"
+                 ondragover="dragOverHandler({{ $follower.ID }})(event)"
+                 ondragleave="dragLeaveHandler({{ $follower.ID }})(event)"
             >
 
-                <h3>{{ $followee.DisplayName }}</h3>
+                <h3>{{ $follower.DisplayName }}</h3>
 
-                {{ if $followee.Images }}
-                    <img src="{{ (index $followee.Images 0).URL }}" alt="{{ $followee.DisplayName }}'s profile image">
+                {{ if $follower.Images }}
+                    <img src="{{ (index $follower.Images 0).URL }}" alt="{{ $follower.DisplayName }}'s profile image">
                 {{ end }}
             </div>
         {{ end }}

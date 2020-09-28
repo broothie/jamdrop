@@ -8,12 +8,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (db *DB) GetUserFollowees(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Println("db.GetUserFollowees", user.ID)
+func (db *DB) GetUserFollowers(ctx context.Context, user *model.User) ([]*model.User, error) {
+	db.Logger.Println("db.GetUserFollowers", user.ID)
 
 	followDocs, err := db.
 		collection(model.CollectionFollows).
-		Where("follower_id", "==", user.ID).
+		Where("followee_id", "==", user.ID).
 		Documents(ctx).
 		GetAll()
 	if err != nil {
@@ -21,30 +21,30 @@ func (db *DB) GetUserFollowees(ctx context.Context, user *model.User) ([]*model.
 	}
 
 	userCollection := db.collection(model.CollectionUsers)
-	var followeeDocRefs []*firestore.DocumentRef
+	var followerDocRefs []*firestore.DocumentRef
 	for _, doc := range followDocs {
-		followeeID, err := doc.DataAt("followee_id")
+		followeeID, err := doc.DataAt("follower_id")
 		if err != nil {
 			db.Logger.Println("failed to read follow data", doc.Data())
 		}
 
-		followeeDocRefs = append(followeeDocRefs, userCollection.Doc(followeeID.(string)))
+		followerDocRefs = append(followerDocRefs, userCollection.Doc(followeeID.(string)))
 	}
 
-	followeeDocs, err := db.GetAll(ctx, followeeDocRefs)
+	followerDocs, err := db.GetAll(ctx, followerDocRefs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get followee data")
 	}
 
-	var followees []*model.User
-	for _, doc := range followeeDocs {
+	var followers []*model.User
+	for _, doc := range followerDocs {
 		followee := new(model.User)
 		if err := doc.DataTo(followee); err != nil {
 			db.Logger.Println("failed to read followee data", doc.Data())
 		}
 
-		followees = append(followees, followee)
+		followers = append(followers, followee)
 	}
 
-	return followees, nil
+	return followers, nil
 }

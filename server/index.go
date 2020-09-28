@@ -16,7 +16,7 @@ func (s *Server) Index() http.HandlerFunc {
 	type Data struct {
 		Flashes   []interface{}
 		User      *model.User
-		Followees []*model.User
+		Followers []*model.User
 	}
 
 	index := template.Must(template.ParseFiles("views/index.html"))
@@ -24,15 +24,15 @@ func (s *Server) Index() http.HandlerFunc {
 		s.Logger.Println("server.Index")
 
 		user, _ := model.UserFromContext(r.Context())
-		followees, err := s.DB.GetUserFollowees(r.Context(), user)
+		followers, err := s.DB.GetUserFollowers(r.Context(), user)
 		if err != nil {
-			s.Flash(w, r, "Failed to retrieve followees.")
+			s.Flash(w, r, "Failed to retrieve followers.")
 		}
 
 		data := Data{
 			Flashes:   s.GetFlashes(w, r),
 			User:      user,
-			Followees: followees,
+			Followers: followers,
 		}
 
 		// Allows "hot" page reloading
