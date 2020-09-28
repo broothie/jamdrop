@@ -12,20 +12,20 @@ import (
 )
 
 type Server struct {
-	App     *app.App
-	Logger  *log.Logger
-	Spotify *spotify.Spotify
-	DB      *db.DB
-	Session *sessions.CookieStore
+	App      *app.App
+	Logger   *log.Logger
+	Spotify  *spotify.Spotify
+	DB       *db.DB
+	Sessions *sessions.CookieStore
 }
 
 func New(app *app.App) *Server {
 	return &Server{
-		App:     app,
-		Logger:  app.Logger,
-		Spotify: app.Spotify,
-		DB:      app.DB,
-		Session: sessions.NewCookieStore([]byte(app.Config.SecretKey)),
+		App:      app,
+		Logger:   app.Logger,
+		Spotify:  app.Spotify,
+		DB:       app.DB,
+		Sessions: sessions.NewCookieStore([]byte(app.Config.SecretKey)),
 	}
 }
 
@@ -39,7 +39,7 @@ func (s *Server) Run() {
 }
 
 func (s *Server) Handler() http.Handler {
-	return ApplyLoggerMiddleware(s.Routes(), s.Logger)
+	return RequestIDMiddleware(ApplyLoggerMiddleware(s.Routes(), s.Logger))
 }
 
 func (s *Server) Error(w http.ResponseWriter, error string, code int) {

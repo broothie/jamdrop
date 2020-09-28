@@ -7,14 +7,18 @@ import (
 	"github.com/broothie/queuecumber/model"
 )
 
+func (s *Server) SpotifyAuthorizeRedirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/spotify/authorize", http.StatusTemporaryRedirect)
+}
+
 func (s *Server) SpotifyAuthorize() http.Handler {
 	return http.RedirectHandler(s.Spotify.UserAuthorizeURL(), http.StatusTemporaryRedirect)
 }
 
 func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer http.Redirect(w, r, "/app", http.StatusPermanentRedirect)
 		s.Logger.Println("server.SpotifyAuthorizeCallback")
+		defer s.AppRedirect(w, r)
 
 		code := r.URL.Query().Get("code")
 		user := new(model.User)
@@ -30,17 +34,31 @@ func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 			return
 		}
 
-		fields := firestore.Merge(
-			firestore.FieldPath{"id"},
-			firestore.FieldPath{"display_name"},
-			firestore.FieldPath{"access_token"},
-			firestore.FieldPath{"refresh_token"},
-		)
-
-		if err := s.DB.UpsertUser(r.Context(), user, fields); err != nil {
+		userExists, err := s.DB.Exists(r.Context(), model.CollectionUsers, user.ID)
+		if err != nil {
 			s.Logger.Println(err)
 			s.Flash(w, r, "An error occurred. Please try again.")
 			return
+		}
+
+		if userExists {
+			updates := []firestore.Update{
+				{Path: "display_name", Value: user.DisplayName},
+				{Path: "access_token", Value: user.AccessToken},
+				{Path: "refresh_token", Value: user.RefreshToken},
+			}
+
+			if err := s.DB.Update(r.Context(), user, updates...); err != nil {
+				s.Logger.Println(err)
+				s.Flash(w, r, "An error occurred. Please try again.")
+				return
+			}
+		} else {
+			if err := s.DB.Create(r.Context(), user); err != nil {
+				s.Logger.Println(err)
+				s.Flash(w, r, "An error occurred. Please try again.")
+				return
+			}
 		}
 
 		if err := s.LogInUser(r.Context(), w, r, user); err != nil {

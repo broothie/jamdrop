@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/broothie/queuecumber/db"
 	"github.com/broothie/queuecumber/model"
 	"github.com/pkg/errors"
 )
 
-const sessionName = "session"
-const sessionTokenName = "session_token"
+const (
+	sessionName      = "session"
+	sessionTokenName = "session_token"
+)
 
 func (s *Server) LogInUser(ctx context.Context, w http.ResponseWriter, r *http.Request, user *model.User) error {
 	token, err := s.DB.CreateUserSession(ctx, user.ID)
@@ -29,7 +30,7 @@ func (s *Server) LogInUser(ctx context.Context, w http.ResponseWriter, r *http.R
 
 func (s *Server) LogIn(w http.ResponseWriter, r *http.Request, token string) bool {
 	s.Logger.Println("setting cookie", token)
-	session, _ := s.Session.Get(r, sessionName)
+	session, _ := s.Sessions.Get(r, sessionName)
 	session.Values[sessionTokenName] = token
 	if err := session.Save(r, w); err != nil {
 		s.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,29 +40,25 @@ func (s *Server) LogIn(w http.ResponseWriter, r *http.Request, token string) boo
 	return true
 }
 
-func (s *Server) LogOut(w http.ResponseWriter) {
+func (s *Server) LogOut(w http.ResponseWriter, r *http.Request) bool {
 	s.Logger.Println("removing cookie")
-	http.SetCookie(w, &http.Cookie{
-		Name:     sessionName,
-		Expires:  time.Now(),
-		Path:     "/",
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
-	})
+	session, _ := s.Sessions.Get(r, sessionName)
+	delete(session.Values, sessionTokenName)
+	if err := session.Save(r, w); err != nil {
+		s.Error(w, err.Error(), http.StatusInternalServerError)
+		return false
+	}
+
+	return true
 }
 
-func (s *Server) RequireLoggedIn(next http.HandlerFunc) http.HandlerFunc {
-	return s.RequireLoggedInMiddleware(next)
-}
-
-func (s *Server) RequireLoggedInMiddleware(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		session, _ := s.Session.Get(r, sessionName)
+func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := s.Sessions.Get(r, sessionName)
 		token := session.Values[sessionTokenName]
 		if token == nil {
 			s.Logger.Println("no session token")
-			http.Redirect(w, r, "/spotify/authorize", http.StatusTemporaryRedirect)
+			s.SpotifyAuthorizeRedirect(w, r)
 			return
 		}
 
@@ -69,20 +66,20 @@ func (s *Server) RequireLoggedInMiddleware(next http.Handler) http.HandlerFunc {
 		if err != nil {
 			if db.IsNotFound(err) {
 				s.Logger.Println("no user for session_token", token)
-				http.Redirect(w, r, "/spotify/authorize", http.StatusTemporaryRedirect)
-			} else {
-				s.Error(w, err.Error(), http.StatusInternalServerError)
+				s.SpotifyAuthorizeRedirect(w, r)
+				return
 			}
 
+			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		next.ServeHTTP(w, r.WithContext(user.Context(r.Context())))
-	}
+	})
 }
 
 func (s *Server) GetFlashes(w http.ResponseWriter, r *http.Request) []interface{} {
-	session, _ := s.Session.Get(r, sessionName)
+	session, _ := s.Sessions.Get(r, sessionName)
 	flashes := session.Flashes()
 	if err := session.Save(r, w); err != nil {
 		s.Logger.Println("failed to save flashes:", err)
@@ -92,7 +89,7 @@ func (s *Server) GetFlashes(w http.ResponseWriter, r *http.Request) []interface{
 }
 
 func (s *Server) Flash(w http.ResponseWriter, r *http.Request, value interface{}, vars ...string) {
-	session, _ := s.Session.Get(r, sessionName)
+	session, _ := s.Sessions.Get(r, sessionName)
 	session.AddFlash(value, vars...)
 	if err := session.Save(r, w); err != nil {
 		s.Logger.Println("failed to save flashes:", err)

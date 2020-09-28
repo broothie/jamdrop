@@ -1,36 +1,37 @@
 package model
 
-import "context"
+import (
+	"context"
+	"time"
+)
+
+const CollectionUsers Collection = "users"
+
+type User struct {
+	Base
+	AccessToken          string    `json:"access_token" firestore:"access_token"`
+	RefreshToken         string    `json:"refresh_token" firestore:"refresh_token"`
+	ExpiresIn            int       `json:"expires_in" firestore:"-"`
+	AccessTokenExpiresAt time.Time `firestore:"access_token_expires_at"`
+
+	DisplayName string `json:"display_name" firestore:"display_name"`
+}
+
+func (*User) Collection() Collection {
+	return CollectionUsers
+}
+
+func (u *User) UpdateAccessTokenExpiration() {
+	u.AccessTokenExpiresAt = time.Now().Add(time.Duration(u.ExpiresIn) * time.Second)
+}
+
+func (u *User) AccessTokenIsFresh() bool {
+	return time.Now().After(u.AccessTokenExpiresAt)
+}
 
 type userContextKey struct{}
 
 var userContextK userContextKey
-
-type User struct {
-	ID           string `json:"id" firestore:"id"`
-	AccessToken  string `json:"access_token" firestore:"access_token"`
-	RefreshToken string `json:"refresh_token" firestore:"refresh_token"`
-
-	DisplayName string             `json:"display_name" firestore:"display_name"`
-	Friends     map[string]*Friend `json:"friends" firestore:"friends"`
-}
-
-type Friend struct {
-	ID          string `json:"id" firestore:"id"`
-	DisplayName string `json:"display_name" firestore:"display_name"`
-}
-
-func (u *User) AddFriend(friendUser *User) {
-	if u.Friends == nil {
-		u.Friends = make(map[string]*Friend)
-	}
-
-	u.Friends[friendUser.ID] = friendUser.ToFriend()
-}
-
-func (u *User) ToFriend() *Friend {
-	return &Friend{ID: u.ID, DisplayName: u.DisplayName}
-}
 
 func (u *User) Context(parent context.Context) context.Context {
 	return context.WithValue(parent, userContextK, u)

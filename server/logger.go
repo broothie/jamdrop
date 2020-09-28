@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -33,18 +34,33 @@ func ApplyLoggerMiddleware(next http.Handler, logger *log.Logger) http.Handler {
 func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			recorder := newLoggerRecorder(w)
-
-			before := time.Now()
-			next.ServeHTTP(recorder, r)
-			elapsed := time.Since(before)
+			requestID, _ := RequestIDFromContext(r.Context())
 
 			requestSize := r.ContentLength
 			if requestSize < 0 {
 				requestSize = 0
 			}
 
-			logger.Printf("%s %s %dB | %d %s %dB | %v\n",
+			// Log before
+			logger.Printf("%s%s %s %dB\n",
+				// Request ID
+				requestIDPrefix(requestID),
+				// Request
+				r.Method,
+				r.URL.Path,
+				requestSize,
+			)
+
+			// Make request
+			recorder := newLoggerRecorder(w)
+			before := time.Now()
+			next.ServeHTTP(recorder, r)
+			elapsed := time.Since(before)
+
+			// Log afer
+			logger.Printf("%s%s %s %dB | %d %s %dB | %v\n",
+				// Request ID
+				requestIDPrefix(requestID),
 				// Request
 				r.Method,
 				r.URL.Path,
@@ -58,4 +74,12 @@ func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 			)
 		})
 	}
+}
+
+func requestIDPrefix(requestID string) string {
+	if requestID == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("%s | ", requestID)
 }
