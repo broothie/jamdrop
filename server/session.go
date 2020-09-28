@@ -74,6 +74,12 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 			return
 		}
 
+		go func() {
+			if err := s.DB.Touch(context.Background(), &model.SessionToken{Base: model.Base{ID: token.(string)}}); err != nil {
+				s.Logger.Printf("failed to touch session_token; id: %v: %v\n", token, err)
+			}
+		}()
+
 		next.ServeHTTP(w, r.WithContext(user.Context(r.Context())))
 	})
 }

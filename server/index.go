@@ -19,7 +19,7 @@ func (s *Server) Index() http.HandlerFunc {
 		Followees []*model.User
 	}
 
-	//index := template.Must(template.ParseFiles("views/index.html"))
+	index := template.Must(template.ParseFiles("views/index.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.Index")
 
@@ -35,7 +35,11 @@ func (s *Server) Index() http.HandlerFunc {
 			Followees: followees,
 		}
 
-		index := template.Must(template.ParseFiles("views/index.html"))
+		// Allows "hot" page reloading
+		if s.App.Config.IsDevelopment() {
+			index = template.Must(template.ParseFiles("views/index.html"))
+		}
+
 		if err := index.Execute(w, data); err != nil {
 			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
