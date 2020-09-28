@@ -17,7 +17,7 @@ func (db *DB) GetUserFollowers(ctx context.Context, user *model.User) ([]*model.
 		Documents(ctx).
 		GetAll()
 	if err != nil {
-		return nil, errors.Wrapf(err, "")
+		return nil, errors.Wrapf(err, "failed to get follows; user_id: %s", user.ID)
 	}
 
 	userCollection := db.collection(model.CollectionUsers)
