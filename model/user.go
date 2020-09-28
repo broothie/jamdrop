@@ -14,7 +14,12 @@ type User struct {
 	ExpiresIn            int       `json:"expires_in" firestore:"-"`
 	AccessTokenExpiresAt time.Time `firestore:"access_token_expires_at"`
 
-	DisplayName string `json:"display_name" firestore:"display_name"`
+	DisplayName string  `json:"display_name" firestore:"display_name"`
+	Images      []Image `json:"images" firestore:"images"`
+}
+
+type Image struct {
+	URL string `json:"url" firestore:"url"`
 }
 
 func (*User) Collection() Collection {

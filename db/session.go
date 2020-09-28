@@ -24,7 +24,11 @@ func (db *DB) GetUserBySessionToken(ctx context.Context, token string) (*model.U
 
 	user := new(model.User)
 	if err := db.Get(ctx, userID.(string), user); err != nil {
-		return nil, errors.Wrapf(err, "failed to get use '%v'", userID)
+		if IsNotFound(err) {
+			return nil, err
+		}
+
+		return nil, errors.Wrapf(err, "failed to get user '%v'", userID)
 	}
 
 	return user, nil

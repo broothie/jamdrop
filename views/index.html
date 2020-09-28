@@ -20,13 +20,17 @@
         .followee {
             border: 1px solid gray;
             border-radius: 10px;
-            padding: 50px;
+            padding: 30px;
             margin: 10px;
         }
 
         .followee.dragover {
             border: 1px solid black;
+        }
 
+        .followee img {
+            width: 100px;
+            height: 100px;
         }
     </style>
 
@@ -56,7 +60,12 @@
                  ondragover="dragOverHandler({{ $followee.ID }})(event)"
                  ondragleave="dragLeaveHandler({{ $followee.ID }})(event)"
             >
-                {{ $followee.DisplayName }}
+
+                <h3>{{ $followee.DisplayName }}</h3>
+
+                {{ if $followee.Images }}
+                    <img src="{{ (index $followee.Images 0).URL }}" alt="{{ $followee.DisplayName }}'s profile image">
+                {{ end }}
             </div>
         {{ end }}
     </div>

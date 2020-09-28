@@ -5,7 +5,7 @@ import "time"
 type Collection string
 
 type Base struct {
-	ID        string    `firestore:"id"`
+	ID        string    `firestore:"id,omitempty"`
 	CreatedAt time.Time `firestore:"created_at"`
 	UpdatedAt time.Time `firestore:"updated_at"`
 }
