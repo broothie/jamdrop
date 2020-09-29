@@ -1,9 +1,7 @@
 package spotify
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -33,7 +31,7 @@ func New(cfg *config.Config, db *db.DB, logger *log.Logger) *Spotify {
 }
 
 func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*model.User, error) {
-	s.Logger.Println("spotify.GetUserByID")
+	s.Logger.Println("spotify.GetUserByID", currentUser.ID, otherUserID)
 
 	if err := s.refreshAccessTokenIfExpired(currentUser); err != nil {
 		return nil, errors.Wrapf(err, "failed to refresh access token; user_id: %s", currentUser.ID)
@@ -54,8 +52,38 @@ func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*mod
 	return otherUser, nil
 }
 
+type SongData struct {
+	Name string `json:"name"`
+}
+
+func (s *Spotify) GetSongData(user *model.User, songIdentifier string) (SongData, error) {
+	s.Logger.Println("spotify.QueueSongForUser", user.ID, songIdentifier)
+
+	if err := s.refreshAccessTokenIfExpired(user); err != nil {
+		return SongData{}, err
+	}
+
+	songID, err := IDFromIdentifier(songIdentifier)
+	if err != nil {
+		return SongData{}, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/tracks/%s", songID), nil)
+	if err != nil {
+		return SongData{}, errors.Wrapf(err, "")
+	}
+
+	s.setBearerAuth(req, user.AccessToken)
+	var songData SongData
+	if err := s.requestToJSON(req, &songData); err != nil {
+		return SongData{}, err
+	}
+
+	return songData, nil
+}
+
 func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) error {
-	s.Logger.Println("spotify.QueueSongForUser")
+	s.Logger.Println("spotify.QueueSongForUser", user.ID, songIdentifier)
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)
@@ -78,62 +106,4 @@ func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) erro
 	}
 
 	return nil
-}
-
-func (s *Spotify) setUserData(accessToken string, user *model.User) error {
-	s.Logger.Println("spotify.SetUserData")
-
-	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/me"), nil)
-	if err != nil {
-		return errors.Wrap(err, "failed to create user data request")
-	}
-
-	s.setBearerAuth(req, accessToken)
-	if err := s.requestToJSON(req, user); err != nil {
-		return errors.Wrapf(err, "failed to make request for user with token '%s'", accessToken)
-	}
-
-	user.UpdateAccessTokenExpiration()
-	return nil
-}
-
-func (s *Spotify) request(r *http.Request) (*http.Response, []byte, error) {
-	s.Logger.Printf("%s %s", r.Method, r.URL.String())
-
-	res, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to make request")
-	}
-
-	var body []byte
-	if body, err = ioutil.ReadAll(res.Body); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to read request body")
-	}
-
-	if res.StatusCode < 200 || 299 < res.StatusCode {
-		return nil, nil, fmt.Errorf("bad response; status %d, body: %s", res.StatusCode, body)
-	}
-
-	return res, body, nil
-}
-
-func (s *Spotify) requestToJSON(r *http.Request, v interface{}) error {
-	_, body, err := s.request(r)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(body, v); err != nil {
-		return errors.Wrap(err, "failed to unmarshal request response")
-	}
-
-	return nil
-}
-
-func (s *Spotify) setBasicAuth(r *http.Request) {
-	r.SetBasicAuth(s.ClientID, s.ClientSecret)
-}
-
-func (s *Spotify) setBearerAuth(r *http.Request, token string) {
-	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 }
