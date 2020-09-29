@@ -25,21 +25,21 @@ type Model interface {
 
 func (db *DB) Create(ctx context.Context, m Model) error {
 	now := time.Now()
-	collection := db.envCollectionFor(m)
+	collection := db.EnvCollectionForModel(m)
 	db.Logger.Println("db.Create", collection)
 
 	m.SetCreatedAt(now)
 	m.SetUpdatedAt(now)
 
 	if m.GetID() == "" {
-		result, _, err := db.collectionFor(m).Add(ctx, m)
+		result, _, err := db.CollectionForModel(m).Add(ctx, m)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create record; collection: %s", collection)
 		}
 
 		m.SetID(result.ID)
 	} else {
-		if _, err := db.collectionFor(m).Doc(m.GetID()).Create(ctx, m); err != nil {
+		if _, err := db.CollectionForModel(m).Doc(m.GetID()).Create(ctx, m); err != nil {
 			return errors.Wrapf(err, "failed to create record; collection: %s, id: %s", collection, m.GetID())
 		}
 	}
@@ -48,18 +48,18 @@ func (db *DB) Create(ctx context.Context, m Model) error {
 }
 
 func (db *DB) Touch(ctx context.Context, m Model) error {
-	collection := db.envCollectionFor(m)
+	collection := db.EnvCollectionForModel(m)
 	db.Logger.Println("db.Touch", collection, m.GetID())
 	return db.Update(ctx, m)
 }
 
 func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) error {
-	collection := db.envCollectionFor(m)
+	collection := db.EnvCollectionForModel(m)
 	db.Logger.Println("db.Update", collection, m.GetID())
 
 	updatedAt := time.Now()
 	updates = append(updates, firestore.Update{Path: "updated_at", Value: updatedAt})
-	if _, err := db.collectionFor(m).Doc(m.GetID()).Update(ctx, updates); err != nil {
+	if _, err := db.CollectionForModel(m).Doc(m.GetID()).Update(ctx, updates); err != nil {
 		return errors.Wrapf(err, "failed to update record; collection: %s, id: %s", collection, m.GetID())
 	}
 
@@ -68,20 +68,20 @@ func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) 
 }
 
 func (db *DB) Get(ctx context.Context, id string, m Model) error {
-	collection := db.envCollectionFor(m)
+	collection := db.EnvCollectionForModel(m)
 	db.Logger.Println("db.Get", collection, id)
 
-	doc, err := db.collectionFor(m).Doc(id).Get(ctx)
+	doc, err := db.CollectionForModel(m).Doc(id).Get(ctx)
 	if err != nil {
 		if isCodeNotFound(err) {
 			return db.notFound(m.Collection(), id)
 		}
 
-		return errors.Wrapf(err, "failed to get record; collection: %s, id: %s", db.envCollectionFor(m), id)
+		return errors.Wrapf(err, "failed to get record; collection: %s, id: %s", db.EnvCollectionForModel(m), id)
 	}
 
 	if err := doc.DataTo(m); err != nil {
-		return errors.Wrapf(err, "failed to read record data; collection: %s, id: %s", db.envCollectionFor(m), id)
+		return errors.Wrapf(err, "failed to read record data; collection: %s, id: %s", db.EnvCollectionForModel(m), id)
 	}
 
 	m.SetID(doc.Ref.ID)
@@ -89,7 +89,7 @@ func (db *DB) Get(ctx context.Context, id string, m Model) error {
 }
 
 func (db *DB) Exists(ctx context.Context, collection model.Collection, id string) (bool, error) {
-	envCollection := db.envCollection(collection)
+	envCollection := db.EnvCollectionForName(collection)
 	db.Logger.Println("db.Exists", envCollection, id)
 
 	_, err := db.Collection(envCollection).Doc(id).Get(ctx)
@@ -104,19 +104,19 @@ func (db *DB) Exists(ctx context.Context, collection model.Collection, id string
 	return true, nil
 }
 
-func (db *DB) collectionFor(m Model) *firestore.CollectionRef {
-	return db.collection(m.Collection())
+func (db *DB) CollectionForModel(m Model) *firestore.CollectionRef {
+	return db.CollectionForName(m.Collection())
 }
 
-func (db *DB) collection(collection model.Collection) *firestore.CollectionRef {
-	return db.Collection(db.envCollection(collection))
+func (db *DB) CollectionForName(collection model.Collection) *firestore.CollectionRef {
+	return db.Collection(db.EnvCollectionForName(collection))
 }
 
-func (db *DB) envCollectionFor(m Model) string {
-	return db.envCollection(m.Collection())
+func (db *DB) EnvCollectionForModel(m Model) string {
+	return db.EnvCollectionForName(m.Collection())
 }
 
-func (db *DB) envCollection(collection model.Collection) string {
+func (db *DB) EnvCollectionForName(collection model.Collection) string {
 	if db.Config.IsProduction() {
 		return fmt.Sprintf("production.%s", collection)
 	} else if db.Config.IsTest() {

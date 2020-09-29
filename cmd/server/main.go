@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/broothie/queuecumber/app"
@@ -10,6 +11,8 @@ import (
 
 func main() {
 	cfg := config.New()
+	fmt.Print(cfg)
+
 	app, err := app.New(cfg)
 	if err != nil {
 		log.Panic(err)

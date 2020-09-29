@@ -49,10 +49,15 @@ func (s *Server) Routes() http.Handler {
 		Path("/authorize/callback").
 		Handler(s.SpotifyAuthorizeCallback())
 
-	if s.App.Config.IsDevelopment() {
-		printRoutes(root)
+	if s.App.Config.Internal {
+		jobs := root.PathPrefix("/jobs").Subrouter()
+		jobs.
+			Methods(http.MethodGet).
+			Path("/eject_session_tokens").
+			HandlerFunc(s.EjectSessionTokens)
 	}
 
+	printRoutes(root)
 	return root
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/securecookie"
 )
@@ -18,6 +19,7 @@ const (
 
 type Config struct {
 	Environment Environment
+	Internal    bool
 	SecretKey   string
 
 	// HTTP
@@ -32,8 +34,9 @@ type Config struct {
 }
 
 func New() *Config {
-	c := &Config{}
+	c := new(Config)
 	c.Environment = Environment(env("APP_ENV", "development"))
+	c.Internal = env("INTERNAL", "false") == "true"
 	c.SecretKey = env("SECRET_KEY", string(securecookie.GenerateRandomKey(32)))
 
 	// HTTP
@@ -51,6 +54,19 @@ func New() *Config {
 	c.SpotifyClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
 
 	return c
+}
+
+func (c *Config) String() string {
+	builder := new(strings.Builder)
+	builder.WriteString(fmt.Sprintf("Environment: %v\n", c.Environment))
+	builder.WriteString(fmt.Sprintf("Internal: %v\n", c.Internal))
+	builder.WriteString(fmt.Sprintf("IsNgrok: %v\n", c.IsNgrok))
+	builder.WriteString(fmt.Sprintf("Protocol: %v\n", c.Protocol))
+	builder.WriteString(fmt.Sprintf("Host: %v\n", c.Host))
+	builder.WriteString(fmt.Sprintf("Port: %v\n", c.Port))
+	builder.WriteString(fmt.Sprintf("SpotifyClientID: %v\n", c.SpotifyClientID))
+
+	return builder.String()
 }
 
 func (c *Config) IsTest() bool {

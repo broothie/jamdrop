@@ -12,7 +12,7 @@ func (db *DB) GetUserFollowers(ctx context.Context, user *model.User) ([]*model.
 	db.Logger.Println("db.GetUserFollowers", user.ID)
 
 	followDocs, err := db.
-		collection(model.CollectionFollows).
+		CollectionForName(model.CollectionFollows).
 		Where("followee_id", "==", user.ID).
 		Documents(ctx).
 		GetAll()
@@ -20,7 +20,7 @@ func (db *DB) GetUserFollowers(ctx context.Context, user *model.User) ([]*model.
 		return nil, errors.Wrapf(err, "failed to get follows; user_id: %s", user.ID)
 	}
 
-	userCollection := db.collection(model.CollectionUsers)
+	userCollection := db.CollectionForName(model.CollectionUsers)
 	var followerDocRefs []*firestore.DocumentRef
 	for _, doc := range followDocs {
 		followeeID, err := doc.DataAt("follower_id")
