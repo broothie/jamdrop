@@ -10,7 +10,6 @@ import (
 )
 
 func (s *Server) Follow() http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.Follow")
 		defer s.AppRedirect(w, r)

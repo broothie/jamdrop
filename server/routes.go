@@ -13,6 +13,11 @@ func (s *Server) Routes() http.Handler {
 
 	root.
 		Methods(http.MethodGet).
+		Path("/ping").
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "pong") })
+
+	root.
+		Methods(http.MethodGet).
 		Path("/app").
 		Handler(s.RequireLoggedIn(s.Index()))
 
@@ -44,12 +49,10 @@ func (s *Server) Routes() http.Handler {
 		Path("/authorize/callback").
 		Handler(s.SpotifyAuthorizeCallback())
 
-	root.
-		Methods(http.MethodGet).
-		Path("/ping").
-		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "pong") })
+	if s.App.Config.IsDevelopment() {
+		printRoutes(root)
+	}
 
-	printRoutes(root)
 	return root
 }
 

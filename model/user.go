@@ -31,7 +31,7 @@ func (u *User) UpdateAccessTokenExpiration() {
 }
 
 func (u *User) AccessTokenIsFresh() bool {
-	return time.Now().After(u.AccessTokenExpiresAt)
+	return time.Now().Before(u.AccessTokenExpiresAt)
 }
 
 type userContextKey struct{}

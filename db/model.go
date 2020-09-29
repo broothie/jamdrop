@@ -48,6 +48,8 @@ func (db *DB) Create(ctx context.Context, m Model) error {
 }
 
 func (db *DB) Touch(ctx context.Context, m Model) error {
+	collection := db.envCollectionFor(m)
+	db.Logger.Println("db.Touch", collection, m.GetID())
 	return db.Update(ctx, m)
 }
 
@@ -122,15 +124,4 @@ func (db *DB) envCollection(collection model.Collection) string {
 	} else {
 		return fmt.Sprintf("development.%s", collection)
 	}
-}
-
-func initBase(base *model.Base) error {
-	if base.CreatedAt != (time.Time{}) {
-		return fmt.Errorf("model init with non-zero created_at")
-	}
-
-	now := time.Now()
-	base.CreatedAt = now
-	base.UpdatedAt = now
-	return nil
 }

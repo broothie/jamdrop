@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/broothie/queuecumber/config"
+	"github.com/broothie/queuecumber/db"
 	"github.com/broothie/queuecumber/model"
 	"github.com/pkg/errors"
 )
@@ -18,21 +19,23 @@ type Spotify struct {
 	ClientSecret string
 	BaseURL      string
 	Logger       *log.Logger
+	DB           *db.DB
 }
 
-func New(cfg *config.Config, logger *log.Logger) *Spotify {
+func New(cfg *config.Config, db *db.DB, logger *log.Logger) *Spotify {
 	return &Spotify{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifyClientSecret,
 		BaseURL:      cfg.BaseURL(),
 		Logger:       logger,
+		DB:           db,
 	}
 }
 
 func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*model.User, error) {
 	s.Logger.Println("spotify.GetUserByID")
 
-	if err := s.RefreshAccessTokenIfExpired(currentUser); err != nil {
+	if err := s.refreshAccessTokenIfExpired(currentUser); err != nil {
 		return nil, errors.Wrapf(err, "failed to refresh access token; user_id: %s", currentUser.ID)
 	}
 
@@ -54,7 +57,7 @@ func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*mod
 func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) error {
 	s.Logger.Println("spotify.QueueSongForUser")
 
-	if err := s.RefreshAccessTokenIfExpired(user); err != nil {
+	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)
 	}
 
@@ -77,7 +80,7 @@ func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) erro
 	return nil
 }
 
-func (s *Spotify) SetUserData(accessToken string, user *model.User) error {
+func (s *Spotify) setUserData(accessToken string, user *model.User) error {
 	s.Logger.Println("spotify.SetUserData")
 
 	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/me"), nil)

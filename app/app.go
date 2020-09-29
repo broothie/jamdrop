@@ -18,8 +18,12 @@ type App struct {
 }
 
 func New(cfg *config.Config) (*App, error) {
-	logger := log.New(os.Stdout, "[queuecumber] ", log.LstdFlags)
+	logFlags := log.Lshortfile
+	if cfg.IsDevelopment() {
+		logFlags |= log.LstdFlags
+	}
 
+	logger := log.New(os.Stdout, "[queuecumber] ", logFlags)
 	db, err := db.New(cfg, logger)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -28,7 +32,7 @@ func New(cfg *config.Config) (*App, error) {
 	return &App{
 		Config:  cfg,
 		Logger:  logger,
-		Spotify: spotify.New(cfg, logger),
+		Spotify: spotify.New(cfg, db, logger),
 		DB:      db,
 	}, nil
 }
