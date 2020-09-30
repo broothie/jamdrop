@@ -2,49 +2,86 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/firestore"
 	"github.com/broothie/queuecumber/model"
 	"github.com/pkg/errors"
 )
 
-func (db *DB) GetUserFollowers(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Println("db.GetUserFollowers", user.ID)
+func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string) error {
+	db.Logger.Println("db.AddShare", user.ID, shareUserID)
 
-	followDocs, err := db.
-		CollectionForName(model.CollectionFollows).
-		Where("followee_id", "==", user.ID).
-		Documents(ctx).
-		GetAll()
+	shareUserExists, err := db.Exists(ctx, model.CollectionUsers, shareUserID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get follows; user_id: %s", user.ID)
+		return err
 	}
 
-	userCollection := db.CollectionForName(model.CollectionUsers)
-	var followerDocRefs []*firestore.DocumentRef
-	for _, doc := range followDocs {
-		followeeID, err := doc.DataAt("follower_id")
-		if err != nil {
-			db.Logger.Println("failed to read follow data", doc.Data())
-		}
-
-		followerDocRefs = append(followerDocRefs, userCollection.Doc(followeeID.(string)))
+	if !shareUserExists {
+		return db.notFound(model.CollectionUsers, shareUserID)
 	}
 
-	followerDocs, err := db.GetAll(ctx, followerDocRefs)
+	user.EnsureShares()
+	user.Shares[shareUserID] = model.UserShare{Enabled: true}
+	option := firestore.Merge(firestore.FieldPath{"shares"})
+	if _, err := db.Collection(user).Doc(user.ID).Set(ctx, user, option); err != nil {
+		return errors.Wrapf(err, "failed to add share; user_id: %s, share_user_id: %s", user.ID, shareUserID)
+	}
+
+	return nil
+}
+
+// Get users this user has shared their queue with
+func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.User, error) {
+	db.Logger.Println("db.GetUserShares", user.ID)
+
+	userCollection := db.Collection(model.CollectionUsers)
+	shareDocRefs := make([]*firestore.DocumentRef, len(user.Shares))
+	counter := 0
+	for id := range user.Shares {
+		shareDocRefs[counter] = userCollection.Doc(id)
+		counter++
+	}
+
+	shareDocs, err := db.GetAll(ctx, shareDocRefs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get followee data")
 	}
 
-	var followers []*model.User
-	for _, doc := range followerDocs {
-		followee := new(model.User)
-		if err := doc.DataTo(followee); err != nil {
+	var shares []*model.User
+	for _, doc := range shareDocs {
+		share := new(model.User)
+		if err := doc.DataTo(share); err != nil {
 			db.Logger.Println("failed to read followee data", doc.Data())
 		}
 
-		followers = append(followers, followee)
+		shares = append(shares, share)
 	}
 
-	return followers, nil
+	return shares, nil
+}
+
+func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.User, error) {
+	db.Logger.Println("db.GetUserSharers", user.ID)
+
+	docs, err := db.
+		Collection(model.CollectionUsers).
+		Where(fmt.Sprintf("shares.%s.enabled", user.ID), "==", true).
+		Documents(ctx).
+		GetAll()
+	if err != nil {
+		return nil, errors.Wrapf(err, "")
+	}
+
+	var sharers []*model.User
+	for _, doc := range docs {
+		sharer := new(model.User)
+		if err := doc.DataTo(sharer); err != nil {
+			db.Logger.Printf("failed to read sharer data; user_id: %s, error: %v\n", user.ID, err)
+		}
+
+		sharers = append(sharers, sharer)
+	}
+
+	return sharers, nil
 }

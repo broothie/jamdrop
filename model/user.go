@@ -9,13 +9,17 @@ const CollectionUsers Collection = "users"
 
 type User struct {
 	Base
-	AccessToken          string    `json:"access_token" firestore:"access_token"`
-	RefreshToken         string    `json:"refresh_token" firestore:"refresh_token"`
-	ExpiresIn            int       `json:"expires_in" firestore:"-"`
-	AccessTokenExpiresAt time.Time `firestore:"access_token_expires_at"`
+	AccessToken          string               `firestore:"access_token" json:"access_token"`
+	RefreshToken         string               `firestore:"refresh_token" json:"refresh_token"`
+	ExpiresIn            int                  `firestore:"-" json:"expires_in"`
+	AccessTokenExpiresAt time.Time            `firestore:"access_token_expires_at"`
+	DisplayName          string               `firestore:"display_name" json:"display_name"`
+	Images               []Image              `firestore:"images" json:"images"`
+	Shares               map[string]UserShare `firestore:"shares"` // Users this user has shared their queue with
+}
 
-	DisplayName string  `json:"display_name" firestore:"display_name"`
-	Images      []Image `json:"images" firestore:"images"`
+type UserShare struct {
+	Enabled bool `firestore:"enabled"`
 }
 
 type Image struct {
@@ -32,6 +36,22 @@ func (u *User) UpdateAccessTokenExpiration() {
 
 func (u *User) AccessTokenIsFresh() bool {
 	return time.Now().Before(u.AccessTokenExpiresAt)
+}
+
+func (u *User) EnsureShares() {
+	if u.Shares == nil {
+		u.Shares = make(map[string]UserShare)
+	}
+}
+
+func (u *User) HasQueueSharedWith(other *User) bool {
+	u.EnsureShares()
+	_, isSharedWith := u.Shares[other.ID]
+	return isSharedWith
+}
+
+func (u *User) HasQueueShareFrom(other *User) bool {
+	return other.HasQueueSharedWith(u)
 }
 
 type userContextKey struct{}

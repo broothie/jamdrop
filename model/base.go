@@ -4,6 +4,10 @@ import "time"
 
 type Collection string
 
+func (c Collection) Collection() Collection {
+	return c
+}
+
 type Base struct {
 	ID        string    `firestore:"id,omitempty"`
 	CreatedAt time.Time `firestore:"created_at"`

@@ -57,7 +57,7 @@ type SongData struct {
 }
 
 func (s *Spotify) GetSongData(user *model.User, songIdentifier string) (SongData, error) {
-	s.Logger.Println("spotify.QueueSongForUser", user.ID, songIdentifier)
+	s.Logger.Println("spotify.GetSongData", user.ID, songIdentifier)
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return SongData{}, err

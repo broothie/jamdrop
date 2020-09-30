@@ -12,23 +12,23 @@
             height: 100%;
         }
 
-        .followers {
+        .sharers {
             display: flex;
             flex-direction: row;
         }
 
-        .follower {
+        .sharer {
             border: 1px solid gray;
             border-radius: 10px;
             padding: 30px;
             margin: 10px;
         }
 
-        .follower.dragover {
+        .sharer.dragover {
             border: 1px solid black;
         }
 
-        .follower img {
+        .sharer img {
             width: 100px;
             height: 100px;
         }
@@ -51,22 +51,29 @@
         <button type="submit">Add Friend</button>
     </form>
 
-    <h2>Queues</h2>
-    <div class="followers">
-        {{ range $follower := .Followers }}
-            <div id="{{ $follower.ID }}"
-                 class="follower"
-                 ondrop="dropHandler({{ $follower.ID }})(event)"
-                 ondragover="dragOverHandler({{ $follower.ID }})(event)"
-                 ondragleave="dragLeaveHandler({{ $follower.ID }})(event)"
+    <h2>Queues Shared With You</h2>
+    <div class="sharers">
+        {{ range $sharer := .Sharers }}
+            <div id="{{ $sharer.ID }}"
+                 class="sharer"
+                 ondrop="dropHandler({{ $sharer.ID }})(event)"
+                 ondragover="dragOverHandler(event)"
+                 ondragleave="dragLeaveHandler(event)"
             >
 
-                <h3>{{ $follower.DisplayName }}</h3>
+                <h3>{{ $sharer.DisplayName }}</h3>
 
-                {{ if $follower.Images }}
-                    <img src="{{ (index $follower.Images 0).URL }}" alt="{{ $follower.DisplayName }}'s profile image">
+                {{ if $sharer.Images }}
+                    <img src="{{ (index $sharer.Images 0).URL }}" alt="{{ $sharer.DisplayName }}'s profile image">
                 {{ end }}
             </div>
+        {{ end }}
+    </div>
+
+    <h2>Users You've Shared Your Queue With</h2>
+    <div class="shares">
+        {{ range $share := .Shares }}
+            <div>{{ $share.DisplayName }}</div>
         {{ end }}
     </div>
 
@@ -84,21 +91,15 @@
         }
 
 
-        function dragOverHandler(id) {
-             return function(event) {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'link';
-                const el = document.getElementById(id);
-                 el.classList.add('dragover');
-            };
+        function dragOverHandler(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'link';
+            event.target.classList.add('dragover');
         }
 
-        function dragLeaveHandler(id) {
-             return function(event) {
-                event.preventDefault();
-                const el = document.getElementById(id);
-                 el.classList.remove('dragover');
-            };
+        function dragLeaveHandler(event) {
+            event.preventDefault();
+            event.target.classList.remove('dragover');
         }
     </script>
 </body>

@@ -31,7 +31,7 @@ func (s *Server) Routes() http.Handler {
 	users.
 		Methods(http.MethodGet).
 		Path("/follow").
-		Handler(s.Follow())
+		Handler(s.Share())
 
 	users.
 		Methods(http.MethodPost).

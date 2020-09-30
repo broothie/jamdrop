@@ -95,6 +95,7 @@ func (s *Server) GetFlashes(w http.ResponseWriter, r *http.Request) []interface{
 }
 
 func (s *Server) Flash(w http.ResponseWriter, r *http.Request, value interface{}, vars ...string) {
+	s.Logger.Printf("flash: %v\n", value)
 	session, _ := s.Sessions.Get(r, sessionName)
 	session.AddFlash(value, vars...)
 	if err := session.Save(r, w); err != nil {

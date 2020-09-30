@@ -23,7 +23,7 @@ func (j *Job) EjectSessionTokens(ctx context.Context) error {
 	j.Logger.Printf("deleting session tokens last updated_at before %v\n", thirtyDaysAgo)
 
 	docs, err := j.DB.
-		CollectionForName(model.CollectionSessionTokens).
+		Collection(model.CollectionSessionTokens).
 		Where("updated_at", "<", thirtyDaysAgo).
 		Documents(ctx).
 		GetAll()

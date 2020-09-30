@@ -23,7 +23,7 @@ func IsNotFound(err error) bool {
 }
 
 func (db *DB) notFound(collection model.Collection, lookup string) NotFound {
-	return NotFound{EnvCollection: db.EnvCollectionForName(collection), Lookup: lookup}
+	return NotFound{EnvCollection: db.fullCollectionName(collection), Lookup: lookup}
 }
 
 func isCodeNotFound(err error) bool {
