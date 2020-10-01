@@ -8,8 +8,9 @@ import (
 	"net/url"
 	"path"
 
+	"jamdrop/model"
+
 	"cloud.google.com/go/firestore"
-	"github.com/broothie/queuecumber/model"
 	"github.com/pkg/errors"
 )
 

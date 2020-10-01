@@ -1,4 +1,4 @@
-module github.com/broothie/queuecumber
+module jamdrop
 
 go 1.14
 

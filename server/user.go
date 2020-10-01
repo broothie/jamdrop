@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/model"
 )
 
 type User struct {

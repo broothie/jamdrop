@@ -4,9 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/broothie/queuecumber/config"
-	"github.com/broothie/queuecumber/db"
-	"github.com/broothie/queuecumber/spotify"
+	"jamdrop/config"
+	"jamdrop/db"
+	"jamdrop/spotify"
+
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +24,7 @@ func New(cfg *config.Config) (*App, error) {
 		logFlags |= log.LstdFlags
 	}
 
-	logger := log.New(os.Stdout, "[queuecumber] ", logFlags)
+	logger := log.New(os.Stdout, "[jamdrop] ", logFlags)
 	db, err := db.New(cfg, logger)
 	if err != nil {
 		return nil, errors.WithStack(err)

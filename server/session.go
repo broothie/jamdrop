@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/broothie/queuecumber/db"
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/db"
+	"jamdrop/model"
+
 	"github.com/pkg/errors"
 )
 
@@ -82,23 +83,4 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(user.Context(r.Context())))
 	})
-}
-
-func (s *Server) GetFlashes(w http.ResponseWriter, r *http.Request) []interface{} {
-	session, _ := s.Sessions.Get(r, sessionName)
-	flashes := session.Flashes()
-	if err := session.Save(r, w); err != nil {
-		s.Logger.Println("failed to save flashes:", err)
-	}
-
-	return flashes
-}
-
-func (s *Server) Flash(w http.ResponseWriter, r *http.Request, value interface{}, vars ...string) {
-	s.Logger.Printf("flash: %v\n", value)
-	session, _ := s.Sessions.Get(r, sessionName)
-	session.AddFlash(value, vars...)
-	if err := session.Save(r, w); err != nil {
-		s.Logger.Println("failed to save flashes:", err)
-	}
 }

@@ -3,7 +3,8 @@ package db
 import (
 	"fmt"
 
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/model"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

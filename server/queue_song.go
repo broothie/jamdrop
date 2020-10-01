@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/model"
+
 	"github.com/gorilla/mux"
 )
 

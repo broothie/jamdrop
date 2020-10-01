@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/broothie/queuecumber/app"
-	"github.com/broothie/queuecumber/config"
-	"github.com/broothie/queuecumber/server"
+	"jamdrop/app"
+	"jamdrop/config"
+	"jamdrop/server"
 )
 
 func main() {

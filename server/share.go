@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/broothie/queuecumber/db"
-	"github.com/broothie/queuecumber/model"
-	"github.com/broothie/queuecumber/spotify"
+	"jamdrop/db"
+	"jamdrop/model"
+	"jamdrop/spotify"
 )
 
 func (s *Server) Share() http.HandlerFunc {

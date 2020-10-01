@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/broothie/queuecumber/job"
+	"jamdrop/job"
 )
 
 func (s *Server) EjectSessionTokens(w http.ResponseWriter, r *http.Request) {

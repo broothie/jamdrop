@@ -6,9 +6,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/broothie/queuecumber/app"
-	"github.com/broothie/queuecumber/db"
-	"github.com/broothie/queuecumber/spotify"
+	"jamdrop/app"
+	"jamdrop/db"
+	"jamdrop/spotify"
+
 	"github.com/gorilla/sessions"
 )
 

@@ -3,7 +3,8 @@ package db
 import (
 	"context"
 
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/model"
+
 	"github.com/pkg/errors"
 )
 

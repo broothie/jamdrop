@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/broothie/queuecumber/config"
-	"github.com/broothie/queuecumber/db"
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/config"
+	"jamdrop/db"
+	"jamdrop/model"
+
 	"github.com/pkg/errors"
 )
 

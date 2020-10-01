@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/broothie/queuecumber/app"
-	"github.com/broothie/queuecumber/model"
+	"jamdrop/app"
+	"jamdrop/model"
 )
 
 type Job struct {
