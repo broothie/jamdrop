@@ -1,5 +1,4 @@
 .env
-queuecumber.json
 gin-bin
 main
 dist

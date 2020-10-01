@@ -37,7 +37,7 @@ func (s *Server) Share() http.HandlerFunc {
 
 		if err := s.DB.AddShare(r.Context(), user, shareUserID); err != nil {
 			if db.IsNotFound(err) {
-				s.Error(w, fmt.Sprintf("%s has not connected to queuecumber yet.", <-nameChan), http.StatusNotFound)
+				s.Error(w, fmt.Sprintf("%s has not connected to jamdrop yet.", <-nameChan), http.StatusNotFound)
 				return
 			}
 

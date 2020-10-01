@@ -1,5 +1,5 @@
 FROM golang:1.14-alpine AS bin_builder
-WORKDIR /go/src/github.com/broothie/queuecumber
+WORKDIR /go/src/jamdrop
 COPY . .
 RUN apk add --update ca-certificates
 RUN go build cmd/server/main.go
@@ -13,6 +13,6 @@ RUN yarn
 RUN yarn build
 
 FROM alpine:3.7
-COPY --from=bin_builder /go/src/github.com/broothie/queuecumber/main main
+COPY --from=bin_builder /go/src/jamdrop/main main
 COPY --from=bundle_builder /usr/src/app/dist dist
 CMD ./main
