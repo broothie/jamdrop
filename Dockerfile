@@ -14,5 +14,5 @@ RUN yarn build
 
 FROM alpine:3.7
 COPY --from=bin_builder /go/src/github.com/broothie/queuecumber/main main
-COPY --from=bundle_builder /usr/src/app/public public
+COPY --from=bundle_builder /usr/src/app/dist dist
 CMD ./main

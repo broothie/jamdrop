@@ -34,6 +34,11 @@ func (s *Server) Routes() http.Handler {
 		Path("/authorize/callback").
 		Handler(s.SpotifyAuthorizeCallback())
 
+	spotify.
+		Methods(http.MethodGet).
+		Path("/authorize/failure").
+		HandlerFunc(s.SpotifyAuthorizeFailure)
+
 	// API
 	api := root.PathPrefix("/api").Subrouter()
 	api.Use(s.RequireLoggedIn)

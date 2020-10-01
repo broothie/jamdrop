@@ -43,11 +43,6 @@ func (s *Server) Handler() http.Handler {
 	return ApplyLoggerMiddleware(s.Routes(), s.Logger)
 }
 
-func (s *Server) AppRedirect(w http.ResponseWriter, r *http.Request) {
-	s.Logger.Println("server.AppRedirect")
-	http.Redirect(w, r, "/", http.StatusPermanentRedirect)
-}
-
 func (s *Server) Error(w http.ResponseWriter, error string, code int) {
 	s.Logger.Println(error)
 	http.Error(w, error, code)
