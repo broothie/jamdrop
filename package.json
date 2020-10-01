@@ -6,8 +6,8 @@
   "author": "broothie <adbooth8@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "watch": "parcel watch frontend/index.html -d public --public-url /public",
-    "build": "parcel build frontend/index.html -d public --public-url /public"
+    "watch": "parcel watch frontend/index.html --public-url /public",
+    "build": "parcel build frontend/index.html --public-url /public"
   },
   "dependencies": {
     "mithril": "^2.0.4",

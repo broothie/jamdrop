@@ -50,6 +50,34 @@ func (s *Server) GetUser() http.HandlerFunc {
 	}
 }
 
+func (s *Server) GetUserSharers() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, _ := model.UserFromContext(r.Context())
+
+		sharers, err := s.DB.GetUserSharers(r.Context(), user)
+		if err != nil {
+			s.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		s.JSON(w, publicUsers(sharers))
+	}
+}
+
+func (s *Server) GetUserShares() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, _ := model.UserFromContext(r.Context())
+
+		shares, err := s.DB.GetUserShares(r.Context(), user)
+		if err != nil {
+			s.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		s.JSON(w, publicUsers(shares))
+	}
+}
+
 func publicUser(user *model.User) User {
 	var imageURL string
 	if len(user.Images) > 0 {

@@ -22,7 +22,7 @@ func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string
 	}
 
 	user.EnsureShares()
-	user.Shares[shareUserID] = model.UserShare{Enabled: true}
+	user.Shares[shareUserID] = model.UserShare{Exists: true, Enabled: true}
 	option := firestore.Merge(firestore.FieldPath{"shares"})
 	if _, err := db.Collection(user).Doc(user.ID).Set(ctx, user, option); err != nil {
 		return errors.Wrapf(err, "failed to add share; user_id: %s, share_user_id: %s", user.ID, shareUserID)
@@ -66,7 +66,7 @@ func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.Us
 
 	docs, err := db.
 		Collection(model.CollectionUsers).
-		Where(fmt.Sprintf("shares.%s.enabled", user.ID), "==", true).
+		Where(fmt.Sprintf("shares.%s.exists", user.ID), "==", true).
 		Documents(ctx).
 		GetAll()
 	if err != nil {

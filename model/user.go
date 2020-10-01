@@ -19,6 +19,7 @@ type User struct {
 }
 
 type UserShare struct {
+	Exists  bool `firestore:"exists"` // MUST BE TRUE
 	Enabled bool `firestore:"enabled"`
 }
 

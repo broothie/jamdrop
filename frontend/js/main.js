@@ -1,18 +1,19 @@
 import m from 'mithril';
-import {Add} from "./add";
-import {Sharer} from "./sharer";
-import {Share} from "./share";
+import {Sharers} from "./sharers";
+import {Shares} from "./shares";
+import jam from '../assets/jam.svg';
 
 export const Main = () => ({
     view(vnode) {
         const { userData } = vnode.attrs;
 
-        return m('main', [
-            m('.welcome', m('p', `👋 ${userData.user.name}`)),
-            m('p.sharers-title', 'queues you can drop to'),
-            m('.sharers', [...userData.sharers.map((sharer) => m(Sharer, { sharer })), m(Add)]),
-            m('p.shares-title', "users you've shared your queue with"),
-            m('.shares', userData.shares.map((share) => m(Share, { share })))
-        ]);
+        return m('main',
+            m('.welcome',
+                m('.logo', m('img', { src: jam }), m('p', 'JamDrop')),
+                m('div', m('p', `Welcome, ${userData.user.name} 👋`))
+            ),
+            userData.sharers.length > 0 && m(Sharers, { sharers: userData.sharers }),
+            m(Shares, { shares: userData.shares }),
+        );
     }
 });
