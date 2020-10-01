@@ -2,7 +2,7 @@ FROM golang:1.14-alpine AS bin_builder
 WORKDIR /go/src/jamdrop
 COPY . .
 RUN apk add --update ca-certificates
-RUN scripts/build.bash
+RUN scripts/build.sh
 
 FROM node:14 AS bundle_builder
 WORKDIR /usr/src/app
