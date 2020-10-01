@@ -9,25 +9,24 @@ import (
 
 func (s *Server) Routes() http.Handler {
 	root := mux.NewRouter()
-	root.NotFoundHandler = http.RedirectHandler("/app", http.StatusPermanentRedirect)
+	root.NotFoundHandler = http.RedirectHandler("/", http.StatusPermanentRedirect)
 
+	// Fileserver
+	root.
+		Methods(http.MethodGet).
+		PathPrefix("/public").
+		Handler(http.StripPrefix("/public", http.FileServer(http.Dir("public"))))
+
+	// Ping
 	root.
 		Methods(http.MethodGet).
 		Path("/ping").
 		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "pong") })
 
-	root.
-		Methods(http.MethodGet).
-		Path("/app").
-		Handler(s.RequireLoggedIn(s.Index()))
-
-	root.
-		Methods(http.MethodGet).
-		PathPrefix("/public").
-		Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
-
+	// User endpoints
 	users := root.PathPrefix("/users").Subrouter()
 	users.Use(s.RequireLoggedIn)
+
 	users.
 		Methods(http.MethodGet).
 		Path("/follow").
@@ -38,6 +37,15 @@ func (s *Server) Routes() http.Handler {
 		Path("/queue").
 		Handler(s.QueueSong())
 
+	// API
+	api := root.PathPrefix("/api").Subrouter()
+	api.Use(s.RequireLoggedIn)
+	api.
+		Methods(http.MethodGet).
+		Path("/users/me").
+		Handler(s.GetUser())
+
+	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()
 	spotify.
 		Methods(http.MethodGet).
@@ -49,6 +57,7 @@ func (s *Server) Routes() http.Handler {
 		Path("/authorize/callback").
 		Handler(s.SpotifyAuthorizeCallback())
 
+	// Job endpoints
 	if s.App.Config.Internal {
 		jobs := root.PathPrefix("/jobs").Subrouter()
 		jobs.
@@ -56,6 +65,12 @@ func (s *Server) Routes() http.Handler {
 			Path("/eject_session_tokens").
 			HandlerFunc(s.EjectSessionTokens)
 	}
+
+	// Root
+	root.
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "public/index.html") })
 
 	printRoutes(root)
 	return root

@@ -1,0 +1,19 @@
+{
+  "name": "queuecumber",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/broothie/queuecumber.git",
+  "author": "broothie <adbooth8@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "watch": "parcel watch frontend/index.html -d public --public-url /public",
+    "build": "parcel build frontend/index.html -d public --public-url /public"
+  },
+  "dependencies": {
+    "mithril": "^2.0.4",
+    "parcel-bundler": "^1.12.4"
+  },
+  "devDependencies": {
+    "sass": "^1.26.11"
+  }
+}

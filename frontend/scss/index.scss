@@ -1,0 +1,81 @@
+@import "reset.scss";
+
+html, body, #root {
+    width: 100%;
+    height: 100%;
+
+    font-family: sans-serif;
+    box-sizing: border-box;
+}
+
+main {
+    margin: 0 auto;
+    max-width: 50%;
+
+    > * {
+        margin: 20px 0;
+    }
+}
+
+.welcome {
+    font-size: 18px;
+}
+
+.sharers-title, .shares-title {
+    font-size: 30px;
+}
+
+.card {
+    margin: 5px;
+    border: 1px solid lightgray;
+
+    &:hover {
+        border: 1px solid black;
+    }
+}
+
+$sharer-padding: 20px;
+$sharer-image-size: 100px;
+
+.sharers {
+    display: flex;
+    flex-flow: row;
+}
+
+.add {
+    width: $sharer-padding + $sharer-image-size;
+    height: $sharer-padding + $sharer-image-size;
+
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-content: center;
+
+    p {
+        font-size: 12px;
+        color: gray;
+        text-align: center;
+    }
+}
+
+.sharer {
+    width: fit-content;
+    border: 1px solid lightgray;
+    padding: 20px;
+
+    .name {
+        display: flex;
+        flex-flow: row;
+        justify-content: center;
+    }
+
+    img.image {
+        width: 100px;
+        height: auto;
+    }
+}
+
+.share {
+    border: 1px solid lightgray;
+    padding: 10px;
+}

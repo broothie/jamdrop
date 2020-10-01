@@ -2,3 +2,7 @@
 queuecumber.json
 gin-bin
 main
+public
+yarn-error.log
+.cache
+node_modules
