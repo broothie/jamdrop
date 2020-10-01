@@ -16,11 +16,13 @@ func (s *Server) Routes() http.Handler {
 		PathPrefix("/public").
 		Handler(http.StripPrefix("/public", http.FileServer(http.Dir("dist"))))
 
-	// Ping
+	// Build info
 	root.
 		Methods(http.MethodGet).
-		Path("/ping").
-		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "pong") })
+		Path("/build_info").
+		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			s.JSON(w, s.App.BuildInfo)
+		})
 
 	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()

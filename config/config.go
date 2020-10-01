@@ -1,13 +1,25 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/securecookie"
 )
+
+var (
+	CommitHash    string
+	CommitMessage string
+	BuildTime     string
+)
+
+type BuildInfo {
+	CommitHash    string `json:"commit_hash"`
+	CommitMessage string `json:"commit_message`
+	BuildTime     string `json:"build_time"`
+}
 
 type Environment string
 
@@ -18,23 +30,29 @@ const (
 )
 
 type Config struct {
-	Environment Environment
-	Internal    bool
-	SecretKey   string
+	BuildInfo
+
+	Environment Environment `json:"environment"`
+	Internal    bool        `json:"internal"`
+	SecretKey   string      `json:"-"`
 
 	// HTTP
-	IsNgrok  bool
-	Protocol string
-	Host     string
-	Port     int
+	IsNgrok  bool   `json:"is_ngrok"`
+	Protocol string `json:"protocol"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
 
 	// Spotify
-	SpotifyClientID     string
-	SpotifyClientSecret string
+	SpotifyClientID     string `json:"spotify_client_id"`
+	SpotifyClientSecret string `json:"-"`
 }
 
 func New() *Config {
 	c := new(Config)
+	c.CommitHash = CommitHash
+	c.CommitMessage = CommitMessage
+	c.BuildTime = BuildTime
+
 	c.Environment = Environment(env("APP_ENV", "development"))
 	c.Internal = env("INTERNAL", "false") == "true"
 	c.SecretKey = env("SECRET_KEY", string(securecookie.GenerateRandomKey(32)))
@@ -57,16 +75,12 @@ func New() *Config {
 }
 
 func (c *Config) String() string {
-	builder := new(strings.Builder)
-	builder.WriteString(fmt.Sprintf("Environment: %v\n", c.Environment))
-	builder.WriteString(fmt.Sprintf("Internal: %v\n", c.Internal))
-	builder.WriteString(fmt.Sprintf("IsNgrok: %v\n", c.IsNgrok))
-	builder.WriteString(fmt.Sprintf("Protocol: %v\n", c.Protocol))
-	builder.WriteString(fmt.Sprintf("Host: %v\n", c.Host))
-	builder.WriteString(fmt.Sprintf("Port: %v\n", c.Port))
-	builder.WriteString(fmt.Sprintf("SpotifyClientID: %v\n", c.SpotifyClientID))
+	bytes, err := json.Marshal(c)
+	if err != nil {
+		return fmt.Sprintf("failed to marshal config: %v\n", err)
+	}
 
-	return builder.String()
+	return fmt.Sprintf("config: %s\n", bytes)
 }
 
 func (c *Config) IsTest() bool {
