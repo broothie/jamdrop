@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/broothie/queuecumber/model"
+	"github.com/gorilla/mux"
 )
 
 func (s *Server) QueueSong() http.HandlerFunc {
@@ -12,11 +13,10 @@ func (s *Server) QueueSong() http.HandlerFunc {
 		s.Logger.Println("server.QueueSong")
 
 		user, _ := model.UserFromContext(r.Context())
-		friendID := r.URL.Query().Get("user_id")
+		friendID := mux.Vars(r)["user_id"]
 		friend := new(model.User)
 		if err := s.DB.Get(r.Context(), friendID, friend); err != nil {
-			s.Logger.Println(err)
-			s.Flash(w, r, "An error occurred. Please try again.")
+			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -36,11 +36,10 @@ func (s *Server) QueueSong() http.HandlerFunc {
 		}()
 
 		if err := s.Spotify.QueueSongForUser(friend, songIdentifier); err != nil {
-			s.Logger.Println(err)
-			s.Flash(w, r, "An error occurred. Please try again.")
+			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		s.Flash(w, r, fmt.Sprintf("%s added to %s's queue!", <-songNameChan, friend.DisplayName))
+		s.JSON(w, map[string]string{"message": fmt.Sprintf("%s dropped to %s's queue", <-songNameChan, friend.DisplayName)})
 	}
 }

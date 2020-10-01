@@ -34,20 +34,22 @@ func ApplyLoggerMiddleware(next http.Handler, logger *log.Logger) http.Handler {
 func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID, _ := RequestIDFromContext(r.Context())
-
 			requestSize := r.ContentLength
 			if requestSize < 0 {
 				requestSize = 0
 			}
 
+			query := ""
+			if len(r.URL.RawQuery) > 0 {
+				query = fmt.Sprintf("?%s", r.URL.RawQuery)
+			}
+
 			// Log before
-			logger.Printf("%s%s %s %dB\n",
-				// Request ID
-				requestIDPrefix(requestID),
+			logger.Printf("%s %s%s %dB\n",
 				// Request
 				r.Method,
 				r.URL.Path,
+				query,
 				requestSize,
 			)
 
@@ -58,12 +60,11 @@ func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 			elapsed := time.Since(before)
 
 			// Log afer
-			logger.Printf("%s%s %s %dB | %d %s %dB | %v\n",
-				// Request ID
-				requestIDPrefix(requestID),
+			logger.Printf("%s %s%s %dB | %d %s %dB | %v\n",
 				// Request
 				r.Method,
 				r.URL.Path,
+				query,
 				requestSize,
 				//Response
 				recorder.status,

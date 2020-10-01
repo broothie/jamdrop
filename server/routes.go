@@ -9,35 +9,20 @@ import (
 
 func (s *Server) Routes() http.Handler {
 	root := mux.NewRouter()
-	root.NotFoundHandler = http.RedirectHandler("/app", http.StatusPermanentRedirect)
 
+	// Fileserver
+	root.
+		Methods(http.MethodGet).
+		PathPrefix("/public").
+		Handler(http.StripPrefix("/public", http.FileServer(http.Dir("dist"))))
+
+	// Ping
 	root.
 		Methods(http.MethodGet).
 		Path("/ping").
 		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "pong") })
 
-	root.
-		Methods(http.MethodGet).
-		Path("/app").
-		Handler(s.RequireLoggedIn(s.Index()))
-
-	root.
-		Methods(http.MethodGet).
-		PathPrefix("/public").
-		Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
-
-	users := root.PathPrefix("/users").Subrouter()
-	users.Use(s.RequireLoggedIn)
-	users.
-		Methods(http.MethodGet).
-		Path("/follow").
-		Handler(s.Share())
-
-	users.
-		Methods(http.MethodPost).
-		Path("/queue").
-		Handler(s.QueueSong())
-
+	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()
 	spotify.
 		Methods(http.MethodGet).
@@ -49,6 +34,43 @@ func (s *Server) Routes() http.Handler {
 		Path("/authorize/callback").
 		Handler(s.SpotifyAuthorizeCallback())
 
+	spotify.
+		Methods(http.MethodGet).
+		Path("/authorize/failure").
+		HandlerFunc(s.SpotifyAuthorizeFailure)
+
+	// API
+	api := root.PathPrefix("/api").Subrouter()
+	api.Use(s.RequireLoggedIn)
+
+	api.
+		Methods(http.MethodPost).
+		Path("/share").
+		Handler(s.Share())
+
+	// Users
+	users := api.PathPrefix("/users").Subrouter()
+	users.
+		Methods(http.MethodGet).
+		Path("/me").
+		Handler(s.GetUser())
+
+	users.
+		Methods(http.MethodGet).
+		Path("/me/sharers").
+		Handler(s.GetUserSharers())
+
+	users.
+		Methods(http.MethodGet).
+		Path("/me/shares").
+		Handler(s.GetUserShares())
+
+	users.
+		Methods(http.MethodPost).
+		Path("/{user_id}/queue").
+		Handler(s.QueueSong())
+
+	// Job endpoints
 	if s.App.Config.Internal {
 		jobs := root.PathPrefix("/jobs").Subrouter()
 		jobs.
@@ -56,6 +78,12 @@ func (s *Server) Routes() http.Handler {
 			Path("/eject_session_tokens").
 			HandlerFunc(s.EjectSessionTokens)
 	}
+
+	// Root
+	root.
+		Methods(http.MethodGet).
+		Path("/").
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "dist/index.html") })
 
 	printRoutes(root)
 	return root

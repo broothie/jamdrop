@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,10 +40,16 @@ func (s *Server) Run() {
 }
 
 func (s *Server) Handler() http.Handler {
-	return RequestIDMiddleware(ApplyLoggerMiddleware(s.Routes(), s.Logger))
+	return ApplyLoggerMiddleware(s.Routes(), s.Logger)
 }
 
 func (s *Server) Error(w http.ResponseWriter, error string, code int) {
 	s.Logger.Println(error)
 	http.Error(w, error, code)
+}
+
+func (s *Server) JSON(w http.ResponseWriter, data interface{}) {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		s.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

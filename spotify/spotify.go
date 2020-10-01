@@ -45,7 +45,7 @@ func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*mod
 	s.setBearerAuth(req, currentUser.AccessToken)
 	otherUser := new(model.User)
 	if err := s.requestToJSON(req, otherUser); err != nil {
-		return nil, errors.Wrapf(err, "request failed; user_id: %s, access_token", otherUserID, currentUser.AccessToken)
+		return nil, errors.Wrapf(err, "request failed; user_id: %s, access_token: %s", otherUserID, currentUser.AccessToken)
 	}
 
 	otherUser.UpdateAccessTokenExpiration()

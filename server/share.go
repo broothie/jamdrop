@@ -12,22 +12,21 @@ import (
 func (s *Server) Share() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.Share")
-		defer s.AppRedirect(w, r)
 
-		shareUserIdentifier := r.FormValue("user_identifier")
+		shareUserIdentifier := r.URL.Query().Get("user_identifier")
 		shareUserID, err := spotify.IDFromIdentifier(shareUserIdentifier)
 		if err != nil {
-			s.Logger.Println(err)
-			s.Flash(w, r, fmt.Sprintf("An error occurred. Please try again."))
+			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		user, _ := model.UserFromContext(r.Context())
 		nameChan := make(chan string)
 		go func() {
 			defer close(nameChan)
 
-			shareUser := new(model.User)
-			if err := s.DB.Get(r.Context(), shareUserID, shareUser); err != nil {
+			shareUser, err := s.Spotify.GetUserByID(user, shareUserID)
+			if err != nil {
 				s.Logger.Println(err)
 				nameChan <- "user"
 				return
@@ -36,25 +35,17 @@ func (s *Server) Share() http.HandlerFunc {
 			nameChan <- shareUser.DisplayName
 		}()
 
-		user, _ := model.UserFromContext(r.Context())
 		if err := s.DB.AddShare(r.Context(), user, shareUserID); err != nil {
 			if db.IsNotFound(err) {
-				shareUser, err := s.Spotify.GetUserByID(user, shareUserID)
-				if err != nil {
-					s.Logger.Println(err)
-					s.Flash(w, r, "An error occurred. Please try again.")
-					return
-				}
-
-				s.Flash(w, r, fmt.Sprintf("%s has not connected to queuecumber yet.", shareUser.DisplayName))
+				s.Error(w, fmt.Sprintf("%s has not connected to queuecumber yet.", <-nameChan), http.StatusNotFound)
 				return
 			}
 
-			s.Logger.Println(err)
-			s.Flash(w, r, "An error occurred. Please try again.")
+			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		s.Flash(w, r, fmt.Sprintf("Shared queue with %s", <-nameChan))
+		w.WriteHeader(http.StatusCreated)
+		s.JSON(w, map[string]string{"message": fmt.Sprintf("Queue shared with %s", <-nameChan)})
 	}
 }

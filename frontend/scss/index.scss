@@ -1,0 +1,114 @@
+@import "reset.scss";
+@import "shake.scss";
+
+html, body, #root {
+    width: 100%;
+    height: 100%;
+
+    font-family: sans-serif;
+    box-sizing: border-box;
+}
+
+main {
+    margin: 0 auto;
+    max-width: 50%;
+
+    > * {
+        margin: 20px 0;
+    }
+}
+
+.welcome {
+    font-size: 18px;
+
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    align-items: baseline;
+
+    .logo {
+        display: flex;
+        flex-flow: row;
+
+        img {
+            width: auto;
+            height: 18px;
+        }
+    }
+}
+
+.sharers-title, .shares-title {
+    font-size: 30px;
+}
+
+.card {
+    margin: 5px;
+    border-width: 1px;
+    border-color: lightgray;
+
+    user-select: none;
+    cursor: pointer;
+
+    &:hover {
+        border-color: black;
+    }
+}
+
+$sharer-padding: 20px;
+$sharer-image-size: 100px;
+
+.sharers-header, .shares-header {
+    display: flex;
+    flex-flow: row;
+    align-items: baseline;
+    justify-content: space-between;
+
+    .sharers-message {
+        color: lightcoral;
+    }
+}
+
+.sharers {
+    display: flex;
+    flex-flow: row;
+
+    .sharer {
+        width: fit-content;
+        padding: 20px;
+        border-style: solid;
+
+        .name {
+            display: flex;
+            flex-flow: row;
+            justify-content: center;
+        }
+
+        img.image {
+            width: 100px;
+            height: auto;
+        }
+    }
+}
+
+.share {
+    border: 1px solid lightgray;
+    padding: 10px;
+    margin: 10px;
+
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+
+    img.image {
+        width: 30px;
+        height: auto;
+    }
+
+    .name {
+        margin-left: 10px;
+    }
+}
+
+.add {
+    border: 1px dashed lightgray;
+}
