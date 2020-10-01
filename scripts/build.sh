@@ -1,4 +1,3 @@
-#! /usr/bin/env bash
 
 commit_hash=$(git rev-list -1 HEAD)
 commit_message=$(git log -1 --pretty=%B | cat)
