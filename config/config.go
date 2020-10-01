@@ -10,12 +10,10 @@ import (
 )
 
 var (
-	CommitHash    string
 	BuildTime     string
 )
 
 type BuildInfo struct {
-	CommitHash    string `json:"commit_hash"`
 	BuildTime     string `json:"build_time"`
 }
 
@@ -47,7 +45,6 @@ type Config struct {
 
 func New() *Config {
 	c := new(Config)
-	c.CommitHash = CommitHash
 	c.BuildTime = BuildTime
 
 	c.Environment = Environment(env("APP_ENV", "development"))

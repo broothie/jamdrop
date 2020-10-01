@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "watch": "parcel watch frontend/index.html --public-url /public",
-    "build": "parcel build frontend/index.html --public-url /public"
+    "build": "parcel build frontend/index.html --public-url /public --no-source-maps"
   },
   "dependencies": {
     "mithril": "^2.0.4",
