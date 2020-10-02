@@ -16,6 +16,7 @@ type User struct {
 	DisplayName          string               `firestore:"display_name" json:"display_name"`
 	Images               []Image              `firestore:"images" json:"images"`
 	Shares               map[string]UserShare `firestore:"shares"` // Users this user has shared their queue with
+	PhoneNumber          string               `firestore:"phone_number"`
 }
 
 type UserShare struct {
@@ -53,6 +54,10 @@ func (u *User) HasQueueSharedWith(other *User) bool {
 
 func (u *User) HasQueueShareFrom(other *User) bool {
 	return other.HasQueueSharedWith(u)
+}
+
+func (u *User) ShareReciprocated(other *User) bool {
+	return u.HasQueueSharedWith(other) && u.HasQueueShareFrom(other)
 }
 
 type userContextKey struct{}

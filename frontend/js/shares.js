@@ -1,16 +1,17 @@
 import m  from 'mithril'
 import {AddShare} from "./add_share";
+import * as api from "./api";
 
 export const Shares = (vnode) => {
     let { shares } = vnode.attrs;
     let message = null;
 
     const reload = () => {
-        m.request('/api/users/me/shares').then((data) => shares = data);
+        api.getShares().then((data) => shares = data);
     };
 
     return {
-        view: () => m('div',
+        view: () => m('.shares-container',
             shares.length > 0 && m('.shares-header',
                 m('p.shares-title', "↓ users you've shared your queue with"),
                 m('p.shares-message', message),

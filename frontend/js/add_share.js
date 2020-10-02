@@ -1,4 +1,5 @@
 import m from 'mithril';
+import * as api from "./api";
 
 export const AddShare = (vnode) => {
     const { reload } = vnode.attrs;
@@ -13,9 +14,9 @@ export const AddShare = (vnode) => {
 
     const ondrop = (event) => {
         event.preventDefault();
-        const user_identifier = event.dataTransfer.getData('text/plain');
+        const userIdentifier = event.dataTransfer.getData('text/plain');
 
-        m.request({ method: 'post', url: '/api/share', params: { user_identifier } })
+        api.addShare(userIdentifier)
             .then(reload)
             .catch((error) => handleError(error));
     };

@@ -12,11 +12,16 @@ type User struct {
 	ImageURL string `json:"image_url"`
 }
 
+type SharedUser struct {
+	User
+	ShareReciprocated bool `json:"share_reciprocated"`
+}
+
 func (s *Server) GetUser() http.HandlerFunc {
 	type Payload struct {
-		User    User   `json:"user"`
-		Shares  []User `json:"shares"`
-		Sharers []User `json:"sharers"`
+		User    User         `json:"user"`
+		Shares  []SharedUser `json:"shares"`
+		Sharers []SharedUser `json:"sharers"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -44,8 +49,8 @@ func (s *Server) GetUser() http.HandlerFunc {
 		<-sharersDone
 		s.JSON(w, Payload{
 			User:    publicUser(user),
-			Shares:  publicUsers(shares),
-			Sharers: publicUsers(sharers),
+			Shares:  sharedUsers(user, shares),
+			Sharers: sharedUsers(user, sharers),
 		})
 	}
 }
@@ -60,7 +65,7 @@ func (s *Server) GetUserSharers() http.HandlerFunc {
 			return
 		}
 
-		s.JSON(w, publicUsers(sharers))
+		s.JSON(w, sharedUsers(user, sharers))
 	}
 }
 
@@ -74,7 +79,7 @@ func (s *Server) GetUserShares() http.HandlerFunc {
 			return
 		}
 
-		s.JSON(w, publicUsers(shares))
+		s.JSON(w, sharedUsers(user, shares))
 	}
 }
 
@@ -98,4 +103,16 @@ func publicUsers(users []*model.User) []User {
 	}
 
 	return publicUsers
+}
+
+func sharedUsers(currentUser *model.User, users []*model.User) []SharedUser {
+	sharedUsers := make([]SharedUser, len(users))
+	for i, user := range users {
+		sharedUsers[i] = SharedUser{
+			User:              publicUser(user),
+			ShareReciprocated: currentUser.ShareReciprocated(user),
+		}
+	}
+
+	return sharedUsers
 }

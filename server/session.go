@@ -71,6 +71,13 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 				return
 			}
 
+			if model.IsExpiredSessionTokenError(err) {
+				s.Logger.Println("session_token expired", token)
+				s.LogOut(w, r)
+				s.SpotifyAuthorizeRedirect(w, r)
+				return
+			}
+
 			s.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

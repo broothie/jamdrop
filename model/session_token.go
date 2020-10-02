@@ -36,3 +36,8 @@ type ExpiredSessionTokenError struct {
 func (e ExpiredSessionTokenError) Error() string {
 	return fmt.Sprintf("session_token is expired; session_token: %s, user_id: %s", e.Token, e.UserID)
 }
+
+func IsExpiredSessionTokenError(err error) bool {
+	_, isExpiredSessionTokenError := err.(ExpiredSessionTokenError)
+	return isExpiredSessionTokenError
+}

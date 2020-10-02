@@ -41,6 +41,13 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			return
 		}
 
+		//songName := <-songNameChan
+		//go func() {
+		//	if err := s.Twilio.SongQueued(user, songName); err != nil {
+		//		s.Logger.Println(err)
+		//	}
+		//}()
+
 		s.JSON(w, map[string]string{"message": fmt.Sprintf("%s dropped to %s's queue", <-songNameChan, friend.DisplayName)})
 	}
 }

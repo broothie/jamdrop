@@ -1,16 +1,14 @@
 import m from 'mithril';
+import * as api from "./api";
 
 export const Sharers = (vnode) => {
     let { sharers } = vnode.attrs;
     let message = null;
 
-    const setMessage = (msg) => {
-        message = msg;
-        setTimeout(() => message = null, 3000);
-    };
+    const setMessage = (msg) => message = msg;
 
     return {
-        view: () => m('div',
+        view: () => m('.sharers-container',
             m('.sharers-header',
                 m('p.sharers-title', '↓ queues you can drop to'),
                 m('p.sharers-message', message),
@@ -26,10 +24,13 @@ export const Sharer = () => ({
 
         const ondrop = (event) => {
             event.preventDefault();
-            const song_identifier = event.dataTransfer.getData('text/plain');
+            const songIdentifier = event.dataTransfer.getData('text/plain');
 
-            m.request({ method: 'post', url: '/api/users/:id/queue', params: { id: sharer.id, song_identifier } })
-                .then((res) => setMessage(res.message));
+            api.queueSong(sharer.id, songIdentifier).then((res) => {
+                setMessage(res.message);
+
+                setTimeout(() => setMessage(null), 3000);
+            });
         };
 
         const ondragover = (event) => {

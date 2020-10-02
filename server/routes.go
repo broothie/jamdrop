@@ -20,9 +20,7 @@ func (s *Server) Routes() http.Handler {
 	root.
 		Methods(http.MethodGet).
 		Path("/build_info").
-		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			s.JSON(w, s.App.BuildInfo)
-		})
+		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { s.JSON(w, s.App.BuildInfo) })
 
 	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()

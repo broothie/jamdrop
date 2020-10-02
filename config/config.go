@@ -10,11 +10,11 @@ import (
 )
 
 var (
-	BuildTime     string
+	BuildTime string
 )
 
 type BuildInfo struct {
-	BuildTime     string `json:"build_time"`
+	BuildTime string `json:"build_time"`
 }
 
 type Environment string
@@ -41,6 +41,10 @@ type Config struct {
 	// Spotify
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"-"`
+
+	// Twilio
+	TwilioAccountSID string `json:"twilio_account_sid"`
+	TwilioAuthToken  string `json:"-"`
 }
 
 func New() *Config {
@@ -64,6 +68,10 @@ func New() *Config {
 	// Spotify
 	c.SpotifyClientID = os.Getenv("SPOTIFY_CLIENT_ID")
 	c.SpotifyClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
+
+	// Twilio
+	c.TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
+	c.TwilioAuthToken = os.Getenv("TWILIO_AUTH_TOKEN")
 
 	return c
 }
