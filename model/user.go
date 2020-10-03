@@ -41,11 +41,11 @@ func (*User) Collection() Collection {
 }
 
 func (u *User) IsPlaying() bool {
-	return time.Now().Add(-5 * time.Minute).Before(u.LastPlaying)
+	return time.Now().Add(-time.Minute).Before(u.LastPlaying)
 }
 
 func (u *User) IsActive() bool {
-	return time.Now().Add(-time.Minute).Before(u.LastPing)
+	return time.Now().Add(-10 * time.Second).Before(u.LastPing)
 }
 
 func (u *User) UpdateAccessTokenExpiration() {
