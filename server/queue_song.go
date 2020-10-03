@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -28,6 +29,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			return
 		}
 
+		// TODO: Possible move this song name stuff into the Spotify service?
 		songIdentifier := r.URL.Query().Get("song_identifier")
 		songNameChan := make(chan string)
 		go func() {
@@ -40,7 +42,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 				return
 			}
 
-			songNameChan <- fmt.Sprintf(`"%s"`, songData.Name)
+			songNameChan <- songData.Name
 		}()
 
 		if err := s.Spotify.QueueSong(friend, songIdentifier); err != nil {
@@ -48,13 +50,15 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			return
 		}
 
-		//songName := <-songNameChan
-		//go func() {
-		//	if err := s.Twilio.SongQueued(user, songName); err != nil {
-		//		s.Logger.Println(err)
-		//	}
-		//}()
+		// TODO: Possible move this song event stuff into the Spotify service?
+		songName := <-songNameChan
+		go func() {
+			event := model.QueuedSongEvent{SongName: songName, UserName: user.DisplayName}
+			if err := s.DB.AddSongQueuedEvent(context.Background(), friend, event); err != nil {
+				s.Logger.Println("failed to add song queued event", err)
+			}
+		}()
 
-		s.Message(w, http.StatusCreated, "%s dropped to %s's queue", <-songNameChan, friend.DisplayName)
+		s.Message(w, http.StatusCreated, `"%s" dropped to %s's queue`, songName, friend.DisplayName)
 	}
 }

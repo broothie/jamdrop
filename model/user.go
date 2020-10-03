@@ -19,6 +19,7 @@ type User struct {
 	PhoneNumber          string               `firestore:"phone_number"`
 	IsPlaying            bool                 `firestore:"is_playing"`
 	LastPing             time.Time            `firestore:"last_ping"`
+	QueuedSongEvents     []QueuedSongEvent    `firestore:"queued_song_events"`
 }
 
 type UserShare struct {
@@ -28,6 +29,11 @@ type UserShare struct {
 
 type Image struct {
 	URL string `json:"url" firestore:"url"`
+}
+
+type QueuedSongEvent struct {
+	SongName string `firestore:"song_name" json:"song_name"`
+	UserName string `firestore:"user_name" json:"user_name"`
 }
 
 func (*User) Collection() Collection {

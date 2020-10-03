@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -11,11 +12,12 @@ import (
 )
 
 type User struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	ImageURL  string `json:"image_url"`
-	IsPlaying bool   `json:"is_playing"`
-	IsActive  bool   `json:"is_active"`
+	ID               string                  `json:"id"`
+	Name             string                  `json:"name"`
+	ImageURL         string                  `json:"image_url"`
+	IsPlaying        bool                    `json:"is_playing"`
+	IsActive         bool                    `json:"is_active"`
+	SongQueuedEvents []model.QueuedSongEvent `json:"song_queued_events"`
 }
 
 type SharedUser struct {
@@ -125,6 +127,16 @@ func (s *Server) PingUser() http.HandlerFunc {
 		if _, err := s.DB.Collection(model.CollectionUsers).Doc(user.ID).Update(r.Context(), updates); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, "failed to ping user")
 		}
+
+		go func() {
+			user.QueuedSongEvents = []model.QueuedSongEvent{}
+			update := firestore.Update{Path: "queued_song_events", Value: user.QueuedSongEvents}
+			if err := s.DB.Update(context.Background(), user, update); err != nil {
+				s.Logger.Printf("failed to clear queued song events; user_id: %s; %v\n", user.ID, err)
+			}
+		}()
+
+		s.JSON(w, http.StatusOK, publicUser(user))
 	}
 }
 
@@ -135,11 +147,12 @@ func publicUser(user *model.User) User {
 	}
 
 	return User{
-		ID:        user.ID,
-		Name:      user.DisplayName,
-		ImageURL:  imageURL,
-		IsPlaying: user.IsPlaying,
-		IsActive:  user.IsActive(),
+		ID:               user.ID,
+		Name:             user.DisplayName,
+		ImageURL:         imageURL,
+		IsPlaying:        user.IsPlaying,
+		IsActive:         user.IsActive(),
+		SongQueuedEvents: user.QueuedSongEvents,
 	}
 }
 

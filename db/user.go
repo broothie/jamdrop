@@ -86,3 +86,14 @@ func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.Us
 
 	return sharers, nil
 }
+
+func (db *DB) AddSongQueuedEvent(ctx context.Context, user *model.User, event model.QueuedSongEvent) error {
+	db.Logger.Println("db.AddSongQueuedEvent", user.ID)
+
+	user.QueuedSongEvents = append(user.QueuedSongEvents, event)
+	if err := db.Update(ctx, user, firestore.Update{Path: "queued_song_events", Value: user.QueuedSongEvents}); err != nil {
+		return errors.Wrapf(err, "failed to add queued song event; user_id: %s, event: %+v", user.ID, event)
+	}
+
+	return nil
+}
