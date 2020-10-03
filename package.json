@@ -13,5 +13,8 @@
     "mithril": "^2.0.4",
     "parcel-bundler": "^1.12.4",
     "sass": "^1.26.11"
+  },
+  "resolutions": {
+    "node-forge": "^0.10.0"
   }
 }
