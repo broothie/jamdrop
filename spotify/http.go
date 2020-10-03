@@ -23,7 +23,7 @@ func accountsPath(path string, v ...interface{}) string {
 	return fmt.Sprintf("%s/%s", AccountsBaseURL, strings.TrimPrefix(fmt.Sprintf(path, v...), "/"))
 }
 
-func (s *Spotify) request(r *http.Request) (*http.Response, []byte, error) {
+func (s *Client) request(r *http.Request) (*http.Response, []byte, error) {
 	s.Logger.Printf("%s %s", r.Method, r.URL.String())
 
 	res, err := http.DefaultClient.Do(r)
@@ -37,20 +37,26 @@ func (s *Spotify) request(r *http.Request) (*http.Response, []byte, error) {
 	}
 
 	if res.StatusCode < 200 || 299 < res.StatusCode {
-		return nil, nil, fmt.Errorf("bad response; status %d, body: %s", res.StatusCode, body)
+		s.Logger.Println("status", res.StatusCode)
+		var errRes errorResponse
+		if err := json.Unmarshal(body, &errRes); err != nil {
+			return nil, nil, errors.Wrap(err, "failed to unmarshal request response")
+		}
+
+		return res, body, errRes.Error
 	}
 
 	return res, body, nil
 }
 
-func (s *Spotify) requestToJSON(r *http.Request, v interface{}) error {
+func (s *Client) requestToJSON(r *http.Request, v interface{}) error {
 	_, body, err := s.request(r)
 	if err != nil {
 		return err
 	}
 
 	if err := json.Unmarshal(body, v); err != nil {
-		return errors.Wrap(err, "failed to unmarshal request response")
+		return errors.Wrapf(err, "failed to unmarshal request response: %s", body)
 	}
 
 	return nil

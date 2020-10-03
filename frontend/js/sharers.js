@@ -2,45 +2,45 @@ import m from 'mithril';
 import * as api from "./api";
 
 export const Sharers = (vnode) => {
-    let { sharers } = vnode.attrs;
-    let message = null;
-
-    const setMessage = (msg) => message = msg;
+    let { sharers, messenger } = vnode.attrs;
 
     return {
-        view: () => m('.sharers-container',
-            m('.sharers-header',
-                m('p.sharers-title', '↓ queues you can drop to'),
-                m('p.sharers-message', message),
-            ),
-            m('.sharers', sharers.map((sharer) => m(Sharer, { sharer, setMessage }))),
-        )
+        view: () => {
+            sharers = sharers.filter((sharer) => sharer.enabled && sharer.is_playing && sharer.is_active);
+
+            return m('.sharers-container',
+                m('.sharers-header', m('p.sharers-title', '↓ queues you can drop to')),
+                m('.sharers', sharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger}))),
+            );
+        }
     };
 };
 
-export const Sharer = () => ({
-    view(vnode) {
-        const { sharer, setMessage } = vnode.attrs;
+export const Sharer = (vnode) => {
+    const { sharer, messenger } = vnode.attrs;
 
-        const ondrop = (event) => {
-            event.preventDefault();
-            const songIdentifier = event.dataTransfer.getData('text/plain');
+    const ondragstart = (event) => {
+        event.dataTransfer.setData('text/plain', sharer.id);
+    };
 
-            api.queueSong(sharer.id, songIdentifier).then((res) => {
-                setMessage(res.message);
+    const ondrop = (event) => {
+        event.preventDefault();
+        const songIdentifier = event.dataTransfer.getData('text/plain');
 
-                setTimeout(() => setMessage(null), 3000);
-            });
-        };
+        api.queueSong(sharer.id, songIdentifier)
+            .then((res) => messenger.setMessage(res.message))
+            .catch((e) => messenger.setError(e.response.error));
+    };
 
-        const ondragover = (event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'link';
-        };
+    const ondragover = (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'link';
+    };
 
-        return m('.sharer.card', { ondrop, ondragover },
-            m('img.image', {src: sharer.image_url}),
+    return {
+        view: () => m('.sharer.card', { draggable: true, ondragstart, ondrop, ondragover },
+            m('img.image', { src: sharer.image_url, draggable: false }),
             m('.name', m('p', sharer.name)),
-        );
-    }
-});
+        )
+    };
+};

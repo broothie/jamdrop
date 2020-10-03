@@ -2,23 +2,16 @@ import m from 'mithril';
 import * as api from "./api";
 
 export const AddShare = (vnode) => {
-    const { reload } = vnode.attrs;
-    const startMessage = 'drag and drop a Spotify user here to add them';
-    let text = startMessage;
-
-    const handleError = (message) => {
-        text = message;
-
-        setTimeout(() => text = startMessage, 3 * 1000)
-    };
+    const { reload, messenger } = vnode.attrs;
 
     const ondrop = (event) => {
         event.preventDefault();
         const userIdentifier = event.dataTransfer.getData('text/plain');
+        console.log(userIdentifier);
 
         api.addShare(userIdentifier)
             .then(reload)
-            .catch((error) => handleError(error));
+            .catch((e) => messenger.setError(e.response.error));
     };
 
     const ondragover = (event) => {
@@ -28,7 +21,7 @@ export const AddShare = (vnode) => {
 
     return {
         view() {
-            return m('.add.share', { ondrop, ondragover }, m('p', text));
+            return m('.add.share', { ondrop, ondragover }, m('p', 'drag and drop a Spotify user here to add them'));
         }
     };
 };

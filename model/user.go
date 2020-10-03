@@ -17,10 +17,12 @@ type User struct {
 	Images               []Image              `firestore:"images" json:"images"`
 	Shares               map[string]UserShare `firestore:"shares"` // Users this user has shared their queue with
 	PhoneNumber          string               `firestore:"phone_number"`
+	IsPlaying            bool                 `firestore:"is_playing"`
+	LastPing             time.Time            `firestore:"last_ping"`
 }
 
 type UserShare struct {
-	Exists  bool `firestore:"exists"` // MUST BE TRUE
+	Exists  bool `firestore:"exists"`
 	Enabled bool `firestore:"enabled"`
 }
 
@@ -30,6 +32,10 @@ type Image struct {
 
 func (*User) Collection() Collection {
 	return CollectionUsers
+}
+
+func (u *User) IsActive() bool {
+	return time.Now().Add(-time.Minute).Before(u.LastPing)
 }
 
 func (u *User) UpdateAccessTokenExpiration() {
@@ -46,10 +52,19 @@ func (u *User) EnsureShares() {
 	}
 }
 
+func (u *User) SetShare(otherUserID string, share UserShare) {
+	u.EnsureShares()
+	u.Shares[otherUserID] = share
+}
+
+func (u *User) GetShareFor(otherUserID string) UserShare {
+	u.EnsureShares()
+	return u.Shares[otherUserID]
+}
+
 func (u *User) HasQueueSharedWith(other *User) bool {
 	u.EnsureShares()
-	_, isSharedWith := u.Shares[other.ID]
-	return isSharedWith
+	return u.GetShareFor(other.ID).Exists
 }
 
 func (u *User) HasQueueShareFrom(other *User) bool {

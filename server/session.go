@@ -34,7 +34,7 @@ func (s *Server) LogIn(w http.ResponseWriter, r *http.Request, token string) boo
 	session, _ := s.Sessions.Get(r, sessionName)
 	session.Values[sessionTokenName] = token
 	if err := session.Save(r, w); err != nil {
-		s.Error(w, err.Error(), http.StatusInternalServerError)
+		s.Error(w, err, http.StatusInternalServerError, "failed to log in")
 		return false
 	}
 
@@ -46,7 +46,7 @@ func (s *Server) LogOut(w http.ResponseWriter, r *http.Request) bool {
 	session, _ := s.Sessions.Get(r, sessionName)
 	delete(session.Values, sessionTokenName)
 	if err := session.Save(r, w); err != nil {
-		s.Error(w, err.Error(), http.StatusInternalServerError)
+		s.Error(w, err, http.StatusInternalServerError, "failed to log out")
 		return false
 	}
 
@@ -78,12 +78,13 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 				return
 			}
 
-			s.Error(w, err.Error(), http.StatusInternalServerError)
+			s.Error(w, err, http.StatusInternalServerError, "failed to find user")
 			return
 		}
 
 		go func() {
-			if err := s.DB.Touch(context.Background(), &model.SessionToken{Base: model.Base{ID: token.(string)}}); err != nil {
+			sessionToken := &model.SessionToken{Base: model.Base{ID: token.(string)}}
+			if err := s.DB.Touch(context.Background(), sessionToken); err != nil {
 				s.Logger.Printf("failed to touch session_token; id: %v: %v\n", token, err)
 			}
 		}()

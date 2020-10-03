@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
 	"jamdrop/db"
@@ -16,7 +15,7 @@ func (s *Server) Share() http.HandlerFunc {
 		shareUserIdentifier := r.URL.Query().Get("user_identifier")
 		shareUserID, err := spotify.IDFromIdentifier(shareUserIdentifier)
 		if err != nil {
-			s.Error(w, err.Error(), http.StatusInternalServerError)
+			s.Error(w, err, http.StatusInternalServerError, "Invalid user identifier")
 			return
 		}
 
@@ -37,15 +36,14 @@ func (s *Server) Share() http.HandlerFunc {
 
 		if err := s.DB.AddShare(r.Context(), user, shareUserID); err != nil {
 			if db.IsNotFound(err) {
-				s.Error(w, fmt.Sprintf("%s has not connected to jamdrop yet.", <-nameChan), http.StatusNotFound)
+				s.Error(w, err, http.StatusNotFound, "%s has not connected to jamdrop yet.", <-nameChan)
 				return
 			}
 
-			s.Error(w, err.Error(), http.StatusInternalServerError)
+			s.Error(w, err, http.StatusInternalServerError, "Failed to share queue with %s", <-nameChan)
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
-		s.JSON(w, map[string]string{"message": fmt.Sprintf("Queue shared with %s", <-nameChan)})
+		s.Message(w, http.StatusCreated, "Queue shared with %s", <-nameChan)
 	}
 }

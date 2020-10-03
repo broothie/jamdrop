@@ -2,19 +2,26 @@ package server
 
 import (
 	"net/http"
+	"time"
+
+	"cloud.google.com/go/firestore"
+	"github.com/gorilla/mux"
 
 	"jamdrop/model"
 )
 
 type User struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	ImageURL string `json:"image_url"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	ImageURL  string `json:"image_url"`
+	IsPlaying bool   `json:"is_playing"`
+	IsActive  bool   `json:"is_active"`
 }
 
 type SharedUser struct {
 	User
 	ShareReciprocated bool `json:"share_reciprocated"`
+	Enabled           bool `json:"enabled"`
 }
 
 func (s *Server) GetUser() http.HandlerFunc {
@@ -25,6 +32,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.GetUser")
 		user, _ := model.UserFromContext(r.Context())
 
 		var sharers []*model.User
@@ -47,7 +55,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 		}
 
 		<-sharersDone
-		s.JSON(w, Payload{
+		s.JSON(w, http.StatusOK, Payload{
 			User:    publicUser(user),
 			Shares:  sharedUsers(user, shares),
 			Sharers: sharedUsers(user, sharers),
@@ -57,29 +65,66 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 func (s *Server) GetUserSharers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.GetUserSharers")
 		user, _ := model.UserFromContext(r.Context())
 
 		sharers, err := s.DB.GetUserSharers(r.Context(), user)
 		if err != nil {
-			s.Error(w, err.Error(), http.StatusInternalServerError)
+			s.Error(w, err, http.StatusInternalServerError, "Failed to get queue sharers")
 			return
 		}
 
-		s.JSON(w, sharedUsers(user, sharers))
+		s.JSON(w, http.StatusOK, sharedUsers(user, sharers))
 	}
 }
 
 func (s *Server) GetUserShares() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.GetUserShares")
 		user, _ := model.UserFromContext(r.Context())
 
 		shares, err := s.DB.GetUserShares(r.Context(), user)
 		if err != nil {
-			s.Error(w, err.Error(), http.StatusInternalServerError)
+			s.Error(w, err, http.StatusInternalServerError, "Failed to get queue shares")
 			return
 		}
 
-		s.JSON(w, sharedUsers(user, shares))
+		s.JSON(w, http.StatusOK, sharedUsers(user, shares))
+	}
+}
+
+func (s *Server) SetShareEnabled() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.SetShareEnabled")
+
+		user, _ := model.UserFromContext(r.Context())
+		shareID := mux.Vars(r)["user_id"]
+		enabled := r.URL.Query().Get("enabled") == "true"
+
+		update := firestore.Update{FieldPath: firestore.FieldPath{"shares", shareID, "enabled"}, Value: enabled}
+		if err := s.DB.Update(r.Context(), user, update); err != nil {
+			s.Error(w, err, http.StatusInternalServerError, "Failed to update queue share setting")
+			return
+		}
+
+		enabledString := "enabled"
+		if !enabled {
+			enabledString = "disabled"
+		}
+
+		s.Message(w, http.StatusOK, "Sharing with %s %s", shareID, enabledString)
+	}
+}
+
+func (s *Server) PingUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.PingUser")
+
+		user, _ := model.UserFromContext(r.Context())
+		updates := []firestore.Update{{Path: "last_ping", Value: time.Now()}}
+		if _, err := s.DB.Collection(model.CollectionUsers).Doc(user.ID).Update(r.Context(), updates); err != nil {
+			s.Error(w, err, http.StatusInternalServerError, "failed to ping user")
+		}
 	}
 }
 
@@ -90,19 +135,12 @@ func publicUser(user *model.User) User {
 	}
 
 	return User{
-		ID:       user.ID,
-		Name:     user.DisplayName,
-		ImageURL: imageURL,
+		ID:        user.ID,
+		Name:      user.DisplayName,
+		ImageURL:  imageURL,
+		IsPlaying: user.IsPlaying,
+		IsActive:  user.IsActive(),
 	}
-}
-
-func publicUsers(users []*model.User) []User {
-	publicUsers := make([]User, len(users))
-	for i, user := range users {
-		publicUsers[i] = publicUser(user)
-	}
-
-	return publicUsers
 }
 
 func sharedUsers(currentUser *model.User, users []*model.User) []SharedUser {
@@ -111,6 +149,7 @@ func sharedUsers(currentUser *model.User, users []*model.User) []SharedUser {
 		sharedUsers[i] = SharedUser{
 			User:              publicUser(user),
 			ShareReciprocated: currentUser.ShareReciprocated(user),
+			Enabled:           currentUser.GetShareFor(user.ID).Enabled,
 		}
 	}
 

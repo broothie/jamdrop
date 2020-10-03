@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/securecookie"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var (
@@ -33,14 +35,13 @@ type Config struct {
 	SecretKey   string      `json:"-"`
 
 	// HTTP
-	IsNgrok  bool   `json:"is_ngrok"`
-	Protocol string `json:"protocol"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
+	Host string `json:"host"`
+	Port string `json:"port"`
 
 	// Spotify
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"-"`
+	ScanWorkers         int    `json:"scan_workers"`
 
 	// Twilio
 	TwilioAccountSID string `json:"twilio_account_sid"`
@@ -56,18 +57,16 @@ func New() *Config {
 	c.SecretKey = env("SECRET_KEY", string(securecookie.GenerateRandomKey(32)))
 
 	// HTTP
-	c.IsNgrok = env("NGROK", "false") == "true"
-	c.Protocol = c.devProd(c.devNgrok("http", "https"), "https").(string)
 	c.Host = env("HOST", "localhost")
-
-	var err error
-	if c.Port, err = strconv.Atoi(env("PORT", "3000")); err != nil {
-		panic(err)
-	}
+	c.Port = env("PORT", "3000")
 
 	// Spotify
 	c.SpotifyClientID = os.Getenv("SPOTIFY_CLIENT_ID")
 	c.SpotifyClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
+	var err error
+	if c.ScanWorkers, err = strconv.Atoi(env("SCAN_WORKERS", "3")); err != nil {
+		panic(err)
+	}
 
 	// Twilio
 	c.TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
@@ -77,12 +76,20 @@ func New() *Config {
 }
 
 func (c *Config) String() string {
-	bytes, err := json.Marshal(c)
+	bytes, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("failed to marshal config: %v\n", err)
 	}
 
 	return fmt.Sprintf("config: %s\n", bytes)
+}
+
+func (c *Config) Protocol() string {
+	if c.IsProduction() || c.IsNgrok() {
+		return "https"
+	}
+
+	return "http"
 }
 
 func (c *Config) IsTest() bool {
@@ -97,8 +104,20 @@ func (c *Config) IsProduction() bool {
 	return c.Environment == EnvProduction
 }
 
+func (c *Config) IsNgrok() bool {
+	return strings.Contains(c.Host, "ngrok")
+}
+
 func (c *Config) BaseURL() string {
-	return fmt.Sprintf("%s://%s%s", c.Protocol, c.Host, c.devProd(c.devNgrok(fmt.Sprintf(":%d", c.Port), ""), ""))
+	return fmt.Sprintf("%s://%s%s", c.Protocol(), c.Host, c.portString())
+}
+
+func (c *Config) portString() string {
+	if c.IsProduction() || c.IsNgrok() {
+		return ""
+	}
+
+	return fmt.Sprintf(":%s", c.Port)
 }
 
 func (c *Config) devProd(dev, prod interface{}) interface{} {
@@ -110,7 +129,7 @@ func (c *Config) devProd(dev, prod interface{}) interface{} {
 }
 
 func (c *Config) devNgrok(dev, ngrok interface{}) interface{} {
-	if c.IsNgrok {
+	if c.IsNgrok() {
 		return ngrok
 	}
 

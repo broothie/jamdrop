@@ -14,24 +14,25 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (s *Spotify) UserAuthorizeURL() string {
+func (s *Client) UserAuthorizeURL(state string) string {
 	u, _ := url.Parse(AccountsBaseURL)
 	u.Path = path.Join(u.Path, "/authorize")
 	u.RawQuery = url.Values{
 		"client_id":     {s.ClientID},
 		"response_type": {"code"},
 		"redirect_uri":  {s.AuthRedirectURI()},
-		"scope":         {"user-modify-playback-state user-read-currently-playing"},
+		"scope":         {"user-modify-playback-state user-read-currently-playing user-read-playback-state"},
+		"state":         {state},
 	}.Encode()
 
 	return u.String()
 }
 
-func (s *Spotify) AuthRedirectURI() string {
+func (s *Client) AuthRedirectURI() string {
 	return fmt.Sprintf("%s/spotify/authorize/callback", s.BaseURL)
 }
 
-func (s *Spotify) UserFromAuthorizationCode(ctx context.Context, code string) (*model.User, error) {
+func (s *Client) UserFromAuthorizationCode(ctx context.Context, code string) (*model.User, error) {
 	s.Logger.Println("spotify.UserFromAuthorizationCode", code)
 
 	user := new(model.User)
@@ -68,7 +69,7 @@ func (s *Spotify) UserFromAuthorizationCode(ctx context.Context, code string) (*
 	return user, nil
 }
 
-func (s *Spotify) setUserTokens(code string, user *model.User) error {
+func (s *Client) setUserTokens(code string, user *model.User) error {
 	s.Logger.Println("spotify.setUserTokens", code, user.ID)
 
 	body := url.Values{
@@ -92,7 +93,7 @@ func (s *Spotify) setUserTokens(code string, user *model.User) error {
 	return nil
 }
 
-func (s *Spotify) setUserData(accessToken string, user *model.User) error {
+func (s *Client) setUserData(accessToken string, user *model.User) error {
 	s.Logger.Println("spotify.setUserData", accessToken, user.ID)
 
 	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/me"), nil)
@@ -109,7 +110,7 @@ func (s *Spotify) setUserData(accessToken string, user *model.User) error {
 	return nil
 }
 
-func (s *Spotify) refreshAccessTokenIfExpired(user *model.User) error {
+func (s *Client) refreshAccessTokenIfExpired(user *model.User) error {
 	if user.AccessTokenIsFresh() {
 		return nil
 	}
@@ -117,7 +118,7 @@ func (s *Spotify) refreshAccessTokenIfExpired(user *model.User) error {
 	return s.refreshAccessToken(user)
 }
 
-func (s *Spotify) refreshAccessToken(user *model.User) error {
+func (s *Client) refreshAccessToken(user *model.User) error {
 	s.Logger.Println("spotify.refreshAccessToken", user.ID)
 
 	body := url.Values{"grant_type": {"refresh_token"}, "refresh_token": {user.RefreshToken}}
@@ -153,10 +154,10 @@ func (s *Spotify) refreshAccessToken(user *model.User) error {
 	return nil
 }
 
-func (s *Spotify) setBasicAuth(r *http.Request) {
+func (s *Client) setBasicAuth(r *http.Request) {
 	r.SetBasicAuth(s.ClientID, s.ClientSecret)
 }
 
-func (s *Spotify) setBearerAuth(r *http.Request, token string) {
+func (s *Client) setBearerAuth(r *http.Request, token string) {
 	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 }

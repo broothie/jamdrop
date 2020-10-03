@@ -15,7 +15,7 @@ import (
 type App struct {
 	*config.Config
 	Logger  *log.Logger
-	Spotify *spotify.Spotify
+	Spotify *spotify.Client
 	DB      *db.DB
 	Twilio  *twilio.Twilio
 }

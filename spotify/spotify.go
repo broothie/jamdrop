@@ -1,37 +1,22 @@
 package spotify
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
-	"jamdrop/config"
-	"jamdrop/db"
 	"jamdrop/model"
 
 	"github.com/pkg/errors"
 )
 
-type Spotify struct {
-	ClientID     string
-	ClientSecret string
-	BaseURL      string
-	Logger       *log.Logger
-	DB           *db.DB
+type SongData struct {
+	Name string `json:"name"`
 }
 
-func New(cfg *config.Config, db *db.DB, logger *log.Logger) *Spotify {
-	return &Spotify{
-		ClientID:     cfg.SpotifyClientID,
-		ClientSecret: cfg.SpotifyClientSecret,
-		BaseURL:      cfg.BaseURL(),
-		Logger:       logger,
-		DB:           db,
-	}
-}
-
-func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*model.User, error) {
+func (s *Client) GetUserByID(currentUser *model.User, otherUserID string) (*model.User, error) {
 	s.Logger.Println("spotify.GetUserByID", currentUser.ID, otherUserID)
 
 	if err := s.refreshAccessTokenIfExpired(currentUser); err != nil {
@@ -53,11 +38,7 @@ func (s *Spotify) GetUserByID(currentUser *model.User, otherUserID string) (*mod
 	return otherUser, nil
 }
 
-type SongData struct {
-	Name string `json:"name"`
-}
-
-func (s *Spotify) GetSongData(user *model.User, songIdentifier string) (SongData, error) {
+func (s *Client) GetSongData(user *model.User, songIdentifier string) (SongData, error) {
 	s.Logger.Println("spotify.GetSongData", user.ID, songIdentifier)
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
@@ -83,8 +64,8 @@ func (s *Spotify) GetSongData(user *model.User, songIdentifier string) (SongData
 	return songData, nil
 }
 
-func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) error {
-	s.Logger.Println("spotify.QueueSongForUser", user.ID, songIdentifier)
+func (s *Client) QueueSong(user *model.User, songIdentifier string) error {
+	s.Logger.Println("spotify.QueueSong", user.ID, songIdentifier)
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)
@@ -100,11 +81,66 @@ func (s *Spotify) QueueSongForUser(user *model.User, songIdentifier string) erro
 		return errors.Wrap(err, "failed to create request for song queuing")
 	}
 
+	songURI := SongURI(songID)
 	req.URL.RawQuery = url.Values{"uri": {SongURI(songID)}}.Encode()
 	s.setBearerAuth(req, user.AccessToken)
 	if _, _, err := s.request(req); err != nil {
+		if err, isSpotifyError := err.(SpotifyError); isSpotifyError && err.Reason == noActiveDevice {
+			return s.setCurrentSong(user, songURI)
+		}
+
 		return errors.Wrapf(err, "failed to make song queue request; access_token: %s, song_identifier: %s", user.AccessToken, songIdentifier)
 	}
 
 	return nil
+}
+
+func (s *Client) setCurrentSong(user *model.User, songURI string) error {
+	s.Logger.Println("spotify.setCurrentSong", user.ID, songURI)
+
+	body := fmt.Sprintf(`{"uris":["%s"]}`, songURI)
+	req, err := http.NewRequest(http.MethodPut, apiPath("v1/me/player/play"), bytes.NewBufferString(body))
+	if err != nil {
+		return errors.Wrap(err, "failed to create request for setting song")
+	}
+
+	s.setBearerAuth(req, user.AccessToken)
+	if _, _, err := s.request(req); err != nil {
+		return errors.Wrap(err, "failed to set current song for user")
+	}
+
+	return nil
+}
+
+func (s *Client) GetCurrentlyPlaying(user *model.User) (bool, error) {
+	s.Logger.Println("spotify.GetCurrentlyPlaying", user.ID)
+
+	if err := s.refreshAccessTokenIfExpired(user); err != nil {
+		return false, errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/me/player"), nil)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to create request for setting song")
+	}
+
+	var playerData struct {
+		IsPlaying bool `json:"is_playing"`
+	}
+
+	s.setBearerAuth(req, user.AccessToken)
+	_, body, err := s.request(req)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get user player status")
+	}
+
+	if len(body) == 0 {
+		return false, nil
+	}
+
+	if err := json.Unmarshal(body, &playerData); err != nil {
+		return false, errors.Wrapf(err, "failed to unmarshal request response: %s", body)
+	}
+
+	return playerData.IsPlaying, nil
 }

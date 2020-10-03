@@ -20,7 +20,7 @@ func (s *Server) Routes() http.Handler {
 	root.
 		Methods(http.MethodGet).
 		Path("/build_info").
-		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { s.JSON(w, s.App.BuildInfo) })
+		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { s.JSON(w, http.StatusOK, s.App.BuildInfo) })
 
 	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()
@@ -66,9 +66,19 @@ func (s *Server) Routes() http.Handler {
 		Handler(s.GetUserShares())
 
 	users.
+		Methods(http.MethodGet).
+		Path("/me/ping").
+		Handler(s.PingUser())
+
+	users.
 		Methods(http.MethodPost).
 		Path("/{user_id}/queue").
 		Handler(s.QueueSong())
+
+	users.
+		Methods(http.MethodPatch).
+		Path("/{user_id}/enabled").
+		Handler(s.SetShareEnabled())
 
 	// Job endpoints
 	if s.App.Config.Internal {
@@ -77,6 +87,11 @@ func (s *Server) Routes() http.Handler {
 			Methods(http.MethodGet).
 			Path("/eject_session_tokens").
 			HandlerFunc(s.EjectSessionTokens)
+
+		jobs.
+			Methods(http.MethodGet).
+			Path("/scan_user_players").
+			HandlerFunc(s.ScanUserPlayers)
 	}
 
 	// Root
