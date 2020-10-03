@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -29,6 +30,12 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			return
 		}
 
+		if !friend.IsPlaying || !friend.IsActive() {
+			message := fmt.Sprintf("%s is not currently active", user.DisplayName)
+			s.Error(w, errors.New(message), http.StatusUnauthorized, message)
+			return
+		}
+
 		// TODO: Possible move this song name stuff into the Spotify service?
 		songIdentifier := r.URL.Query().Get("song_identifier")
 		songNameChan := make(chan string)
@@ -37,7 +44,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 
 			songData, err := s.Spotify.GetSongData(user, songIdentifier)
 			if err != nil {
-				s.Logger.Println(err)
+				s.Logger.Println("failed to get song data", err)
 				songNameChan <- "Song"
 				return
 			}
