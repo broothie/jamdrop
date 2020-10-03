@@ -42,10 +42,6 @@ type Config struct {
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"-"`
 	ScanWorkers         int    `json:"scan_workers"`
-
-	// Twilio
-	TwilioAccountSID string `json:"twilio_account_sid"`
-	TwilioAuthToken  string `json:"-"`
 }
 
 func New() *Config {
@@ -67,10 +63,6 @@ func New() *Config {
 	if c.ScanWorkers, err = strconv.Atoi(env("SCAN_WORKERS", "3")); err != nil {
 		panic(err)
 	}
-
-	// Twilio
-	c.TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
-	c.TwilioAuthToken = os.Getenv("TWILIO_AUTH_TOKEN")
 
 	return c
 }

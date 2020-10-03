@@ -7,7 +7,6 @@ import (
 	"jamdrop/config"
 	"jamdrop/db"
 	"jamdrop/spotify"
-	"jamdrop/twilio"
 
 	"github.com/pkg/errors"
 )
@@ -17,7 +16,6 @@ type App struct {
 	Logger  *log.Logger
 	Spotify *spotify.Client
 	DB      *db.DB
-	Twilio  *twilio.Twilio
 }
 
 func New(cfg *config.Config) (*App, error) {
@@ -37,6 +35,5 @@ func New(cfg *config.Config) (*App, error) {
 		Logger:  logger,
 		Spotify: spotify.New(cfg, db, logger),
 		DB:      db,
-		Twilio:  twilio.New(cfg, logger),
 	}, nil
 }
