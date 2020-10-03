@@ -10,7 +10,7 @@ export const Shares = (vnode) => {
     };
 
     return {
-        view: () => shares.length > 0 && m('.shares-container',
+        view: () => m('.shares-container',
                 m('.shares-header',
                 m('p.shares-title', "↓ people who can drop to your queue"),
             ),

@@ -8,7 +8,7 @@ export const Sharers = (vnode) => {
         view: () => {
             sharers = sharers.filter((sharer) => sharer.enabled && sharer.is_playing && sharer.is_active);
 
-            return m('.sharers-container',
+            return sharers.length > 0 && m('.sharers-container',
                 m('.sharers-header', m('p.sharers-title', '↓ queues you can drop to')),
                 m('.sharers', sharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger}))),
             );

@@ -32,7 +32,7 @@ export const Main = (vnode) => {
                 messenger.message,
                 m('div', m('p', `Welcome, ${userData.user.name} 👋`))
             ),
-            userData.sharers.length > 0 && m(Sharers, { sharers: userData.sharers, messenger }),
+            m(Sharers, { sharers: userData.sharers, messenger }),
             m(Shares, { shares: userData.shares, messenger }),
         )
     };
