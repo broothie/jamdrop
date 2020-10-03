@@ -17,8 +17,8 @@ type User struct {
 	Images               []Image              `firestore:"images" json:"images"`
 	Shares               map[string]UserShare `firestore:"shares"` // Users this user has shared their queue with
 	PhoneNumber          string               `firestore:"phone_number"`
-	LastPlaying          time.Time            `firestore:"last_playing"`
-	LastPing             time.Time            `firestore:"last_ping"`
+	LastPlaying          time.Time            `firestore:"last_playing"` // Scanned every minute
+	LastPing             time.Time            `firestore:"last_ping"`    // Users ping every 10 seconds
 	QueuedSongEvents     []QueuedSongEvent    `firestore:"queued_song_events"`
 }
 
@@ -41,11 +41,11 @@ func (*User) Collection() Collection {
 }
 
 func (u *User) IsPlaying() bool {
-	return time.Now().Add(-time.Minute).Before(u.LastPlaying)
+	return time.Now().Add(-2 * time.Minute).Before(u.LastPlaying)
 }
 
 func (u *User) IsActive() bool {
-	return time.Now().Add(-10 * time.Second).Before(u.LastPing)
+	return time.Now().Add(-60 * time.Second).Before(u.LastPing)
 }
 
 func (u *User) UpdateAccessTokenExpiration() {
