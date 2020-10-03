@@ -29,47 +29,51 @@ export const Sharers = (vnode) => {
     };
 };
 
-export const Sharer = () => ({
-    view: (vnode) => {
-        const {sharer, messenger} = vnode.attrs;
-        const enabled = sharerEnabled(sharer);
+export const Sharer = (vnode) => {
+    const { sharer, messenger } = vnode.attrs;
 
-        const ondragstart = (event) => {
-            event.dataTransfer.setData('text/plain', sharer.id);
-        };
+    const ondragstart = (event) => {
+        event.dataTransfer.setData('text/plain', sharer.id);
+    };
 
-        const ondrop = (event) => {
-            event.preventDefault();
+    const ondrop = (event) => {
+        event.preventDefault();
 
-            const songIdentifier = event.dataTransfer.getData('text/plain');
+        const songIdentifier = event.dataTransfer.getData('text/plain');
 
-            api.queueSong(sharer.id, songIdentifier)
-                .then((res) => messenger.setMessage(res.message))
-                .catch((e) => messenger.setError(e.response.error));
-        };
+        api.queueSong(sharer.id, songIdentifier)
+            .then((res) => messenger.setMessage(res.message))
+            .catch((e) => messenger.setError(e.response.error));
+    };
 
-        const ondragover = (event) => {
-            event.preventDefault();
-            if (!enabled) return;
+    return {
+        view: (vnode) => {
+            const { sharer } = vnode.attrs;
+            const enabled = sharerEnabled(sharer);
 
-            event.dataTransfer.dropEffect = 'link';
-        };
+            const ondragover = (event) => {
+                event.preventDefault();
+                if (!enabled) return;
 
-        const light = enabled ? m('span.light.active', '●') : m('span.light', '○');
+                event.dataTransfer.dropEffect = 'link';
+            };
 
-        return m(
-            '.sharer.card',
-            {
-                class: enabled ? '' : 'disabled',
-                draggable: true,
-                ondragstart,
-                ondrop,
-                ondragover
-            },
-            [
-                m('img.image', {src: sharer.image_url, draggable: false}),
-                m('.name', light, m('p', sharer.name)),
-            ]
-        );
-    }
-});
+            const light = enabled ? m('span.light.active', '●') : m('span.light', '○');
+
+            return m(
+                '.sharer.card',
+                {
+                    class: enabled ? '' : 'disabled',
+                    draggable: true,
+                    ondragstart,
+                    ondrop,
+                    ondragover
+                },
+                [
+                    m('img.image', {src: sharer.image_url, draggable: false}),
+                    m('.name', light, m('p', sharer.name)),
+                ]
+            );
+        }
+    };
+};
