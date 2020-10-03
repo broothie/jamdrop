@@ -4,7 +4,7 @@ import * as api from "./api";
 
 export const Shares = (vnode) => {
     let { shares, messenger } = vnode.attrs;
-    shares = shares.sort((sharer) => sharer.id);
+    shares = shares.sort((a, b) => a.id < b.id);
 
     const reload = () => {
         api.getShares().then((data) => shares = data);

@@ -14,7 +14,7 @@ export const Sharers = (vnode) => {
 
     return {
         view: () => {
-            sharers = sharers.sort((sharer) => sharer.id);
+            sharers = sharers.sort((a, b) => a.id < b.id);
             const enabledSharers = sharers.filter(sharerEnabled);
             const disabledSharers = sharers.filter((sharer) => !sharerEnabled(sharer));
 
