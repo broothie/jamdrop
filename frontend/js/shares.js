@@ -4,6 +4,7 @@ import * as api from "./api";
 
 export const Shares = (vnode) => {
     let { shares, messenger } = vnode.attrs;
+    shares = shares.sort((sharer) => sharer.id);
 
     const reload = () => {
         api.getShares().then((data) => shares = data);
@@ -12,7 +13,7 @@ export const Shares = (vnode) => {
     return {
         view: () => m('.shares-container',
                 m('.shares-header',
-                m('p.shares-title', "↓ people who can drop to your queue"),
+                m('p.shares-title', "↓ share your queue"),
             ),
             m('.shares', m(AddShare, { key: 'add', reload, messenger }), ...shares.map((share) => m(Share, { key: share.id, share, reload })))
         )

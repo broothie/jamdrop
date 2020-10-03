@@ -81,6 +81,16 @@ $sharer-image-size: 100px;
       cursor: grab;
     }
 
+    &.disabled {
+      background-color: whitesmoke;
+      cursor: no-drop;
+
+      img.image {
+        -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+        filter: grayscale(100%);
+      }
+    }
+
     img.image {
       width: 100px;
       height: auto;
@@ -92,6 +102,14 @@ $sharer-image-size: 100px;
       display: flex;
       flex-flow: row;
       justify-content: center;
+
+      .light {
+        margin-right: 5px;
+
+        &.active {
+          color: $color_confirm;
+        }
+      }
     }
 
     button {
@@ -147,5 +165,6 @@ $sharer-image-size: 100px;
     border: 1px dashed lightgray;
     border-radius: 5px;
     user-select: none;
+    cursor: copy;
   }
 }
