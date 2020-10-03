@@ -150,7 +150,7 @@ func publicUser(user *model.User) User {
 		ID:               user.ID,
 		Name:             user.DisplayName,
 		ImageURL:         imageURL,
-		IsPlaying:        user.IsPlaying,
+		IsPlaying:        user.IsPlaying(),
 		IsActive:         user.IsActive(),
 		SongQueuedEvents: user.QueuedSongEvents,
 	}

@@ -17,7 +17,7 @@ type User struct {
 	Images               []Image              `firestore:"images" json:"images"`
 	Shares               map[string]UserShare `firestore:"shares"` // Users this user has shared their queue with
 	PhoneNumber          string               `firestore:"phone_number"`
-	IsPlaying            bool                 `firestore:"is_playing"`
+	LastPlaying          time.Time            `firestore:"last_playing"`
 	LastPing             time.Time            `firestore:"last_ping"`
 	QueuedSongEvents     []QueuedSongEvent    `firestore:"queued_song_events"`
 }
@@ -38,6 +38,10 @@ type QueuedSongEvent struct {
 
 func (*User) Collection() Collection {
 	return CollectionUsers
+}
+
+func (u *User) IsPlaying() bool {
+	return time.Now().Add(-5 * time.Minute).Before(u.LastPlaying)
 }
 
 func (u *User) IsActive() bool {

@@ -16,6 +16,7 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 		return err
 	}
 
+	now := time.Now()
 	batch := j.DB.Batch()
 	var wg sync.WaitGroup
 	docChan := make(chan *firestore.DocumentSnapshot)
@@ -39,7 +40,9 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 					continue
 				}
 
-				batch.Update(doc.Ref, []firestore.Update{{Path: "is_playing", Value: isPlaying}})
+				if isPlaying {
+					batch.Update(doc.Ref, []firestore.Update{{Path: "last_playing", Value: now}})
+				}
 			}
 		}()
 	}

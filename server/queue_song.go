@@ -30,7 +30,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			return
 		}
 
-		if !friend.IsPlaying || !friend.IsActive() {
+		if !friend.IsPlaying() || !friend.IsActive() {
 			message := fmt.Sprintf("%s is not currently active", user.DisplayName)
 			s.Error(w, errors.New(message), http.StatusUnauthorized, message)
 			return
