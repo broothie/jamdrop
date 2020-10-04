@@ -9,6 +9,7 @@ import (
 	"jamdrop/app"
 	"jamdrop/db"
 	"jamdrop/spotify"
+	"jamdrop/twilio"
 
 	"github.com/gorilla/sessions"
 )
@@ -19,6 +20,7 @@ type Server struct {
 	Spotify  *spotify.Client
 	DB       *db.DB
 	Sessions *sessions.CookieStore
+	Twilio   *twilio.Twilio
 }
 
 func New(app *app.App) *Server {
@@ -28,6 +30,7 @@ func New(app *app.App) *Server {
 		Spotify:  app.Spotify,
 		DB:       app.DB,
 		Sessions: sessions.NewCookieStore([]byte(app.Config.SecretKey)),
+		Twilio:   app.Twilio,
 	}
 }
 
