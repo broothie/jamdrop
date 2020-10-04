@@ -1,0 +1,51 @@
+
+.shares {
+  margin: 20px 0;
+
+  .share {
+    border: 1px solid lightgray;
+    padding: 10px;
+    margin: 10px;
+    width: 50%;
+
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: space-between;
+
+    .info {
+      display: flex;
+      flex-flow: row;
+      align-items: center;
+
+      img.image {
+        width: 30px;
+        height: auto;
+      }
+
+      .name {
+        margin-left: 10px;
+      }
+    }
+
+    .enabled {
+      cursor: pointer;
+
+      > * {
+        cursor: pointer;
+      }
+
+      input {
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .add {
+    color: gray;
+    border: 1px dashed lightgray;
+    border-radius: 5px;
+    user-select: none;
+    cursor: copy;
+  }
+}

@@ -2,6 +2,7 @@ import m from 'mithril';
 
 export const getMe = () => m.request('/api/users/me');
 export const getShares = () => m.request('/api/users/me/shares');
+export const getSharers = () => m.request('/api/users/me/sharers');
 export const ping = () => m.request('/api/users/me/ping');
 
 export const addShare = (user_identifier) => m.request({

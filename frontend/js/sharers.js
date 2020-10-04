@@ -5,9 +5,10 @@ const sharerEnabled = (sharer) => sharer.enabled && sharer.is_playing && sharer.
 
 export const Sharers = (vnode) => {
     let { sharers, messenger } = vnode.attrs;
+    console.log(sharers);
 
     setInterval(() => {
-        api.getShares()
+        api.getSharers()
             .then((data) => sharers = data)
             .then(m.redraw);
     }, 10 * 1000);
@@ -19,7 +20,7 @@ export const Sharers = (vnode) => {
             const disabledSharers = sharers.filter((sharer) => !sharerEnabled(sharer));
 
             return sharers.length > 0 && m('.sharers-container',
-                m('.sharers-header', m('p.sharers-title', '↓ drop to a queue')),
+                m('.sharers-header', m('p.title', '↓ drop a jam')),
                 m('.sharers', [
                     ...enabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger})),
                     ...disabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger}))
@@ -50,6 +51,7 @@ export const Sharer = (vnode) => {
         view: (vnode) => {
             const { sharer } = vnode.attrs;
             const enabled = sharerEnabled(sharer);
+            const light = enabled ? m('span.light.active', '●') : m('span.light', '○');
 
             const ondragover = (event) => {
                 event.preventDefault();
@@ -57,8 +59,6 @@ export const Sharer = (vnode) => {
 
                 event.dataTransfer.dropEffect = 'link';
             };
-
-            const light = enabled ? m('span.light.active', '●') : m('span.light', '○');
 
             return m(
                 '.sharer.card',

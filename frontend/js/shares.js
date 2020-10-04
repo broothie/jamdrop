@@ -4,19 +4,25 @@ import * as api from "./api";
 
 export const Shares = (vnode) => {
     let { shares, messenger } = vnode.attrs;
-    shares = shares.sort((a, b) => a.id < b.id);
 
     const reload = () => {
-        api.getShares().then((data) => shares = data);
+        api.getShares()
+            .then((data) => shares = data)
+            .then(m.redraw);
     };
 
     return {
-        view: () => m('.shares-container',
-                m('.shares-header',
-                m('p.shares-title', "↓ share your queue"),
-            ),
-            m('.shares', m(AddShare, { key: 'add', reload, messenger }), ...shares.map((share) => m(Share, { key: share.id, share, reload })))
-        )
+        view: () => {
+            shares = shares.sort((a, b) => a.id < b.id);
+
+            return m('.shares-container',
+                m('.shares-header', m('p.title', "↓ share your queue")),
+                m('.shares', [
+                    m(AddShare, {key: 'add', reload, messenger}),
+                    ...shares.map((share) => m(Share, {key: share.id, share, reload}))
+                ])
+            );
+        }
     };
 };
 

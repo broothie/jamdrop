@@ -1,0 +1,58 @@
+@import "sharers.scss";
+@import "shares.scss";
+
+.spotify-authorize {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  height: 100%;
+}
+
+.welcome {
+  font-size: 18px;
+
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: baseline;
+
+  margin: 20px 0;
+  user-select: none;
+
+  .logo {
+    display: flex;
+    flex-flow: row;
+
+    img {
+      width: auto;
+      height: 18px;
+    }
+
+    p {
+      margin: 0 5px;
+    }
+  }
+
+  p.toast {
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 5px;
+    color: white;
+  }
+
+  p.message {
+    background-color: $color_confirm;
+  }
+
+  p.error {
+    background-color: $color_c;
+  }
+}
+
+.title {
+  font-size: 30px;
+  user-select: none;
+}

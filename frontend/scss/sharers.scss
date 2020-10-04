@@ -1,0 +1,56 @@
+
+.sharers {
+  display: flex;
+  flex-flow: row;
+
+  margin: 20px 0;
+
+  .sharer {
+    width: fit-content;
+    padding: 20px 30px;
+    border-style: solid;
+
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+
+    &:hover {
+      cursor: grab;
+    }
+
+    &.disabled {
+      background-color: whitesmoke;
+      cursor: no-drop;
+
+      img.image {
+        -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+        filter: grayscale(100%);
+      }
+    }
+
+    img.image {
+      width: 100px;
+      height: auto;
+      border-radius: 3px;
+      margin-bottom: 5px;
+    }
+
+    .name {
+      display: flex;
+      flex-flow: row;
+      justify-content: center;
+
+      .light {
+        margin-right: 5px;
+
+        &.active {
+          color: $color_confirm;
+        }
+      }
+    }
+
+    button {
+      font-size: 14px;
+    }
+  }
+}
