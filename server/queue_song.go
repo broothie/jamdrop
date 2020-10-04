@@ -18,20 +18,20 @@ func (s *Server) QueueSong() http.HandlerFunc {
 		s.Logger.Println("server.QueueSong")
 
 		user, _ := model.UserFromContext(r.Context())
-		friendID := mux.Vars(r)["user_id"]
-		friend := new(model.User)
-		if err := s.DB.Get(r.Context(), friendID, friend); err != nil {
+		targetUserID := mux.Vars(r)["user_id"]
+		targetUser := new(model.User)
+		if err := s.DB.Get(r.Context(), targetUserID, targetUser); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, failureMessage)
 			return
 		}
 
-		if !user.CanDropTo(friend) {
-			message := fmt.Sprintf("%s is not currently active", user.DisplayName)
+		if !user.CanDropTo(targetUser) {
+			message := fmt.Sprintf("%s is not currently active", targetUser.DisplayName)
 			s.Error(w, errors.New(message), http.StatusUnauthorized, message)
 			return
 		}
 
-		// TODO: Possible move this song name stuff into the Spotify service?
+		// TODO: Possibly move this song name stuff into the Spotify service?
 		songIdentifier := r.URL.Query().Get("song_identifier")
 		songNameChan := make(chan string)
 		go func() {
@@ -47,20 +47,26 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			songNameChan <- songData.Name
 		}()
 
-		if err := s.Spotify.QueueSong(friend, songIdentifier); err != nil {
+		if err := s.Spotify.QueueSong(targetUser, songIdentifier); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, failureMessage)
 			return
 		}
 
-		// TODO: Possible move this song event stuff into the Spotify service?
+		// TODO: Possibly move this song event stuff into the Spotify service?
 		songName := <-songNameChan
 		go func() {
-			event := model.QueuedSongEvent{SongName: songName, UserName: user.DisplayName}
-			if err := s.DB.AddSongQueuedEvent(context.Background(), friend, event); err != nil {
-				s.Logger.Println("failed to add song queued event", err)
+			if targetUser.IsActive() {
+				event := model.QueuedSongEvent{SongName: songName, UserName: user.DisplayName}
+				if err := s.DB.AddSongQueuedEvent(context.Background(), targetUser, event); err != nil {
+					s.Logger.Println("failed to add song queued event", err)
+				}
+			} else if targetUser.StayActive {
+				if err := s.Twilio.SongQueued(targetUser, songName); err != nil {
+					s.Logger.Printf("failed to send sms to user; user_id: %s; %v\n", user.ID, err)
+				}
 			}
 		}()
 
-		s.Message(w, http.StatusCreated, `"%s" dropped to %s's queue`, songName, friend.DisplayName)
+		s.Message(w, http.StatusCreated, `"%s" dropped to %s's queue`, songName, targetUser.DisplayName)
 	}
 }

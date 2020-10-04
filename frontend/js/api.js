@@ -28,3 +28,9 @@ export const setStayActive = (stay_active) => m.request({
     url: '/api/users/me/stay_active',
     params: { stay_active }
 });
+
+export const setPhoneNumber = (phone_number) => m.request({
+    method: 'patch',
+    url: '/api/users/me/phone_number',
+    params: { phone_number }
+});

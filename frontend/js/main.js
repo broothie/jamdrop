@@ -32,7 +32,7 @@ export const Main = (vnode) => {
             m('.welcome',
                 m('.logo', m('img', {src: jam}), m('p', 'JamDrop')),
                 messenger.message,
-                m('.user', m('p', `Welcome, ${user.name} 👋`), m(Settings, {user}))
+                m('.user', m('p', `Hi, ${user.name} 👋`), m(Settings, {user}))
             ),
             m(Sharers, {sharers: userData.sharers, messenger}),
             m(Shares, {shares: userData.shares, messenger}),
@@ -43,10 +43,12 @@ export const Main = (vnode) => {
 export const Settings = (vnode) => {
     const {user} = vnode.attrs;
     let stayActive = user.stay_active;
+    let phoneNumber = user.phone_number;
 
     return {
         view: () => {
             let stayActiveDisabled = false;
+            let phoneNumberDisabled = false;
 
             const setStayActive = () => {
                 stayActiveDisabled = true;
@@ -55,9 +57,23 @@ export const Settings = (vnode) => {
                     .then(m.redraw);
             };
 
+            const setPhoneNumber = (event) => {
+                const newPhoneNumber = event.target.value;
+
+                phoneNumberDisabled = true;
+                api.setPhoneNumber(newPhoneNumber)
+                    .then(() => phoneNumber = newPhoneNumber)
+                    .then(m.redraw);
+            };
+
             return m('.settings',
                 m('.setting',
-                    m('input', {type: 'text', placeholder: 'phone number', value: user.phone_number})
+                    m('input', {
+                        type: 'text',
+                        placeholder: 'phone number',
+                        value: phoneNumber,
+                        onblur: setPhoneNumber,
+                    })
                 ),
                 m('.setting',
                     m('input#stay-active', {

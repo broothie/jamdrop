@@ -71,6 +71,11 @@ func (s *Server) Routes() http.Handler {
 		Handler(s.SetStayActive())
 
 	users.
+		Methods(http.MethodPatch).
+		Path("/me/phone_number").
+		Handler(s.SetPhoneNumber())
+
+	users.
 		Methods(http.MethodGet).
 		Path("/me/ping").
 		Handler(s.PingUser())

@@ -20,7 +20,7 @@ type Twilio struct {
 
 func New(cfg *config.Config, logger *log.Logger) *Twilio {
 	return &Twilio{
-		Client: twilio.NewClient(cfg.SpotifyClientID, cfg.TwilioAuthToken, nil),
+		Client: twilio.NewClient(cfg.TwilioAccountSID, cfg.TwilioAuthToken, nil),
 		Logger: logger,
 	}
 }
@@ -33,7 +33,7 @@ func (t *Twilio) SongQueued(user *model.User, songName string) error {
 		return nil
 	}
 
-	body := fmt.Sprintf("JamDrop: %s dropped '%s' into your queue", user.DisplayName, songName)
+	body := fmt.Sprintf(`JamDrop: %s dropped "%s" into your queue`, user.DisplayName, songName)
 	if _, err := t.Messages.SendMessage(fromNumber, user.PhoneNumber, body, nil); err != nil {
 		return errors.Wrapf(err, "failed to send song queued message; user_id: %s, song_name: %s", user.ID, songName)
 	}

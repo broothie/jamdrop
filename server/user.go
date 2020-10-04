@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -127,7 +128,7 @@ func (s *Server) SetStayActive() http.HandlerFunc {
 
 		user, _ := model.UserFromContext(r.Context())
 		stayActive := r.URL.Query().Get("stay_active") == "true"
-		update := firestore.Update{FieldPath: firestore.FieldPath{"stay_active"}, Value: stayActive}
+		update := firestore.Update{Path: "stay_active", Value: stayActive}
 		if err := s.DB.Update(r.Context(), user, update); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, "Failed to update queue share setting")
 			return
@@ -139,6 +140,22 @@ func (s *Server) SetStayActive() http.HandlerFunc {
 		}
 
 		s.Message(w, http.StatusOK, "Stay active %s", enabledString)
+	}
+}
+
+func (s *Server) SetPhoneNumber() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.SetPhoneNumber")
+
+		user, _ := model.UserFromContext(r.Context())
+		phoneNumber := r.URL.Query().Get("phone_number")
+		update := firestore.Update{Path: "phone_number", Value: phoneNumber}
+		if err := s.DB.Update(r.Context(), user, update); err != nil {
+			s.Error(w, err, http.StatusInternalServerError, "Failed to update phone number")
+			return
+		}
+
+		s.Message(w, http.StatusOK, "Phone number updated to \"%s\"", phoneNumber)
 	}
 }
 
@@ -165,7 +182,7 @@ func (s *Server) PingUser() http.HandlerFunc {
 }
 
 func publicUser(user *model.User) User {
-	var imageURL string
+	imageURL := fmt.Sprintf("https://robohash.org/%s", user.ID)
 	if len(user.Images) > 0 {
 		imageURL = user.Images[0].URL
 	}
