@@ -15,8 +15,10 @@ type User struct {
 	ID               string                  `json:"id"`
 	Name             string                  `json:"name"`
 	ImageURL         string                  `json:"image_url"`
+	PhoneNumber      string                  `json:"phone_number"`
 	IsPlaying        bool                    `json:"is_playing"`
 	IsActive         bool                    `json:"is_active"`
+	StayActive       bool                    `json:"stay_active"`
 	SongQueuedEvents []model.QueuedSongEvent `json:"song_queued_events"`
 }
 
@@ -118,6 +120,27 @@ func (s *Server) SetShareEnabled() http.HandlerFunc {
 	}
 }
 
+func (s *Server) SetStayActive() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.SetStayActive")
+
+		user, _ := model.UserFromContext(r.Context())
+		stayActive := r.URL.Query().Get("stay_active") == "true"
+		update := firestore.Update{FieldPath: firestore.FieldPath{"stay_active"}, Value: stayActive}
+		if err := s.DB.Update(r.Context(), user, update); err != nil {
+			s.Error(w, err, http.StatusInternalServerError, "Failed to update queue share setting")
+			return
+		}
+
+		enabledString := "enabled"
+		if !stayActive {
+			enabledString = "disabled"
+		}
+
+		s.Message(w, http.StatusOK, "Stay active %s", enabledString)
+	}
+}
+
 func (s *Server) PingUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.PingUser")
@@ -150,8 +173,10 @@ func publicUser(user *model.User) User {
 		ID:               user.ID,
 		Name:             user.DisplayName,
 		ImageURL:         imageURL,
+		PhoneNumber:      user.PhoneNumber,
 		IsPlaying:        user.IsPlaying(),
 		IsActive:         user.IsActive(),
+		StayActive:       user.StayActive,
 		SongQueuedEvents: user.QueuedSongEvents,
 	}
 }

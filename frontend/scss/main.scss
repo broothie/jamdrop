@@ -50,6 +50,40 @@
   p.error {
     background-color: $color_c;
   }
+
+  .user {
+    .settings {
+      position: absolute;
+      display: none;
+      padding: 10px 20px;
+      border: 1px solid lightgray;
+      border-radius: 5px;
+      font-size: 15px;
+      flex-flow: column;
+
+      .setting {
+        margin: 5px 0;
+
+        input[type=checkbox] {
+          margin-right: 5px;
+        }
+
+        label {
+          cursor: pointer;
+        }
+      }
+
+      &:hover {
+        display: flex;
+      }
+    }
+
+    &:hover {
+      .settings {
+        display: flex;
+      }
+    }
+  }
 }
 
 .title {

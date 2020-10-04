@@ -2,9 +2,11 @@ import m from 'mithril';
 import {Sharers} from "./sharers";
 import {Shares} from "./shares";
 import jam from '../assets/jam.svg';
+import * as api from "./api";
 
 export const Main = (vnode) => {
     const { userData } = vnode.attrs;
+    const user = userData.user;
 
     const messenger = {
         message: null,
@@ -30,10 +32,43 @@ export const Main = (vnode) => {
             m('.welcome',
                 m('.logo', m('img', {src: jam}), m('p', 'JamDrop')),
                 messenger.message,
-                m('div', m('p', `Welcome, ${userData.user.name} 👋`))
+                m('.user', m('p', `Welcome, ${user.name} 👋`), m(Settings, {user}))
             ),
-            m(Sharers, { sharers: userData.sharers, messenger }),
-            m(Shares, { shares: userData.shares, messenger }),
+            m(Sharers, {sharers: userData.sharers, messenger}),
+            m(Shares, {shares: userData.shares, messenger}),
         )
+    };
+};
+
+export const Settings = (vnode) => {
+    const {user} = vnode.attrs;
+    let stayActive = user.stay_active;
+
+    return {
+        view: () => {
+            let stayActiveDisabled = false;
+
+            const setStayActive = () => {
+                stayActiveDisabled = true;
+                api.setStayActive(!stayActive)
+                    .then(() => stayActive = !stayActive)
+                    .then(m.redraw);
+            };
+
+            return m('.settings',
+                m('.setting',
+                    m('input', {type: 'text', placeholder: 'phone number', value: user.phone_number})
+                ),
+                m('.setting',
+                    m('input#stay-active', {
+                        type: 'checkbox',
+                        disabled: stayActiveDisabled,
+                        checked: stayActive,
+                        onchange: setStayActive
+                    }),
+                    m('label', {for: 'stay-active'}, 'Stay active')
+                ),
+            );
+        }
     };
 };

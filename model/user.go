@@ -20,6 +20,7 @@ type User struct {
 	LastPlaying          time.Time            `firestore:"last_playing"` // Scanned every minute
 	LastPing             time.Time            `firestore:"last_ping"`    // Users ping every 10 seconds
 	QueuedSongEvents     []QueuedSongEvent    `firestore:"queued_song_events"`
+	StayActive           bool                 `firestore:"stay_active"`
 }
 
 type UserShare struct {

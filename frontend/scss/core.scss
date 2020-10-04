@@ -33,6 +33,15 @@ button {
   }
 }
 
+input[type=text] {
+  border: 1px solid lightgray;
+  padding: 3px;
+
+  &:hover, &:active, &:focus {
+    border: 1px solid gray;
+  }
+}
+
 .card {
   margin: 5px;
 

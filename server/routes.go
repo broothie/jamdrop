@@ -66,6 +66,11 @@ func (s *Server) Routes() http.Handler {
 		Handler(s.GetUserShares())
 
 	users.
+		Methods(http.MethodPatch).
+		Path("/me/stay_active").
+		Handler(s.SetStayActive())
+
+	users.
 		Methods(http.MethodGet).
 		Path("/me/ping").
 		Handler(s.PingUser())

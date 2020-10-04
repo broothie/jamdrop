@@ -1,11 +1,10 @@
 import m from 'mithril';
 import * as api from "./api";
 
-const sharerEnabled = (sharer) => sharer.enabled && sharer.is_playing && sharer.is_active;
+const sharerEnabled = (sharer) => sharer.enabled && sharer.is_playing && (sharer.is_active || sharer.stay_active);
 
 export const Sharers = (vnode) => {
     let { sharers, messenger } = vnode.attrs;
-    console.log(sharers);
 
     setInterval(() => {
         api.getSharers()
@@ -32,7 +31,6 @@ export const Sharers = (vnode) => {
 
 export const Sharer = (vnode) => {
     const { sharer, messenger } = vnode.attrs;
-
     const ondragstart = (event) => {
         event.dataTransfer.setData('text/plain', sharer.id);
     };
