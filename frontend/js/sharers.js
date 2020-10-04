@@ -1,8 +1,6 @@
 import m from 'mithril';
 import * as api from "./api";
 
-const sharerEnabled = (sharer) => sharer.enabled && sharer.is_playing && (sharer.is_active || sharer.stay_active);
-
 export const Sharers = (vnode) => {
     let { sharers, messenger } = vnode.attrs;
 
@@ -15,8 +13,8 @@ export const Sharers = (vnode) => {
     return {
         view: () => {
             sharers = sharers.sort((a, b) => a.id < b.id);
-            const enabledSharers = sharers.filter(sharerEnabled);
-            const disabledSharers = sharers.filter((sharer) => !sharerEnabled(sharer));
+            const enabledSharers = sharers.filter((sharer) => sharer.droppable);
+            const disabledSharers = sharers.filter((sharer) => !sharer.droppable);
 
             return sharers.length > 0 && m('.sharers-container',
                 m('.sharers-header', m('p.title', '↓ drop a jam')),
@@ -48,12 +46,11 @@ export const Sharer = (vnode) => {
     return {
         view: (vnode) => {
             const { sharer } = vnode.attrs;
-            const enabled = sharerEnabled(sharer);
-            const light = enabled ? m('span.light.active', '●') : m('span.light', '○');
+            const light = sharer.droppable ? m('span.light.active', '●') : m('span.light', '○');
 
             const ondragover = (event) => {
                 event.preventDefault();
-                if (!enabled) return;
+                if (!sharer.droppable) return;
 
                 event.dataTransfer.dropEffect = 'link';
             };
@@ -61,7 +58,7 @@ export const Sharer = (vnode) => {
             return m(
                 '.sharer.card',
                 {
-                    class: enabled ? '' : 'disabled',
+                    class: sharer.droppable ? '' : 'disabled',
                     draggable: true,
                     ondragstart,
                     ondrop,

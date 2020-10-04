@@ -19,18 +19,13 @@ func (s *Server) QueueSong() http.HandlerFunc {
 
 		user, _ := model.UserFromContext(r.Context())
 		friendID := mux.Vars(r)["user_id"]
-		if !user.GetShareFor(friendID).Enabled {
-			s.Error(w, fmt.Errorf("shares not enabled by %s for %s", user.ID, friendID), http.StatusUnauthorized, failureMessage)
-			return
-		}
-
 		friend := new(model.User)
 		if err := s.DB.Get(r.Context(), friendID, friend); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, failureMessage)
 			return
 		}
 
-		if !friend.IsPlaying() || !friend.IsActive() {
+		if !user.CanDropTo(friend) {
 			message := fmt.Sprintf("%s is not currently active", user.DisplayName)
 			s.Error(w, errors.New(message), http.StatusUnauthorized, message)
 			return

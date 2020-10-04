@@ -49,6 +49,10 @@ func (u *User) IsActive() bool {
 	return time.Now().Add(-60 * time.Second).Before(u.LastPing)
 }
 
+func (u *User) CanDropTo(other *User) bool {
+	return other.GetShareFor(u.ID).Enabled && other.IsPlaying() && (other.IsActive() || other.StayActive)
+}
+
 func (u *User) UpdateAccessTokenExpiration() {
 	u.AccessTokenExpiresAt = time.Now().Add(time.Duration(u.ExpiresIn) * time.Second)
 }

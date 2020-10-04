@@ -26,6 +26,7 @@ type SharedUser struct {
 	User
 	ShareReciprocated bool `json:"share_reciprocated"`
 	Enabled           bool `json:"enabled"`
+	Droppable         bool `json:"droppable"`
 }
 
 func (s *Server) GetUser() http.HandlerFunc {
@@ -174,7 +175,6 @@ func publicUser(user *model.User) User {
 		Name:             user.DisplayName,
 		ImageURL:         imageURL,
 		PhoneNumber:      user.PhoneNumber,
-		IsPlaying:        user.IsPlaying(),
 		IsActive:         user.IsActive(),
 		StayActive:       user.StayActive,
 		SongQueuedEvents: user.QueuedSongEvents,
@@ -188,6 +188,7 @@ func sharedUsers(currentUser *model.User, users []*model.User) []SharedUser {
 			User:              publicUser(user),
 			ShareReciprocated: currentUser.ShareReciprocated(user),
 			Enabled:           currentUser.GetShareFor(user.ID).Enabled,
+			Droppable:         currentUser.CanDropTo(user),
 		}
 	}
 
