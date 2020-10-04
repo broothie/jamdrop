@@ -25,16 +25,16 @@ func New(cfg *config.Config, logger *log.Logger) *Twilio {
 	}
 }
 
-func (t *Twilio) SongQueued(user *model.User, songName string) error {
-	t.Logger.Println("twilio.SongQueued", user.ID, songName)
+func (t *Twilio) SongQueued(user, targetUser *model.User, songName string) error {
+	t.Logger.Println("twilio.SongQueued", user.ID, targetUser.ID, songName)
 
-	if user.PhoneNumber == "" {
-		t.Logger.Println("user does not have a phone number; user_id", user.ID)
+	if targetUser.PhoneNumber == "" {
+		t.Logger.Println("user does not have a phone number; user_id", targetUser.ID)
 		return nil
 	}
 
 	body := fmt.Sprintf(`JamDrop: %s dropped "%s" into your queue`, user.DisplayName, songName)
-	if _, err := t.Messages.SendMessage(fromNumber, user.PhoneNumber, body, nil); err != nil {
+	if _, err := t.Messages.SendMessage(fromNumber, targetUser.PhoneNumber, body, nil); err != nil {
 		return errors.Wrapf(err, "failed to send song queued message; user_id: %s, song_name: %s", user.ID, songName)
 	}
 

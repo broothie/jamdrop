@@ -61,7 +61,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 					s.Logger.Println("failed to add song queued event", err)
 				}
 			} else if targetUser.StayActive {
-				if err := s.Twilio.SongQueued(targetUser, songName); err != nil {
+				if err := s.Twilio.SongQueued(user, targetUser, songName); err != nil {
 					s.Logger.Printf("failed to send sms to user; user_id: %s; %v\n", user.ID, err)
 				}
 			}
