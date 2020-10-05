@@ -16,7 +16,7 @@ export const Shares = (vnode) => {
             shares = shares.sort((a, b) => a.id < b.id);
 
             return m('.shares-container',
-                m('.shares-header', m('p.title', "↓ share your queue")),
+                m('.shares-header', m('p.title', '↓ share your queue')),
                 m('.shares', [
                     m(AddShare, {key: 'add', reload, messenger}),
                     ...shares.map((share) => m(Share, {key: share.id, share, reload}))

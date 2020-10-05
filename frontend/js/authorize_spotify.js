@@ -1,5 +1,5 @@
 import m from 'mithril';
-import jam from "../assets/jam.svg";
+import jam from "../img/jam.svg";
 
 export const AuthorizeSpotify = () => {
     const onclick = () => location.href = '/spotify/authorize';

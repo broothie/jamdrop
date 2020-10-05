@@ -1,7 +1,7 @@
 import m from 'mithril';
 import {Sharers} from "./sharers";
 import {Shares} from "./shares";
-import jam from '../assets/jam.svg';
+import jam from '../img/jam.svg';
 import * as api from "./api";
 
 export const Main = (vnode) => {
@@ -32,7 +32,10 @@ export const Main = (vnode) => {
             m('.welcome',
                 m('.logo', m('img', {src: jam}), m('p', 'JamDrop')),
                 messenger.message,
-                m('.user', m('p', `Hi, ${user.name} 👋`), m(Settings, {user}))
+                m('.user',
+                    m('p', `Hi, ${user.name} 👋`),
+                    m(Settings, {user})
+                )
             ),
             m(Sharers, {sharers: userData.sharers, messenger}),
             m(Shares, {shares: userData.shares, messenger}),
@@ -67,14 +70,14 @@ export const Settings = (vnode) => {
             };
 
             return m('.settings',
-                m('.setting',
-                    m('input', {
-                        type: 'text',
-                        placeholder: 'phone number',
-                        value: phoneNumber,
-                        onblur: setPhoneNumber,
-                    })
-                ),
+                // m('.setting',
+                //     m('input', {
+                //         type: 'text',
+                //         placeholder: 'phone number',
+                //         value: phoneNumber,
+                //         onblur: setPhoneNumber,
+                //     })
+                // ),
                 m('.setting',
                     m('input#stay-active', {
                         type: 'checkbox',
