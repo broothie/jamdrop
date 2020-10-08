@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -39,7 +40,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.GetUser")
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 
 		var sharers []*model.User
 		sharersDone := make(chan struct{})
@@ -61,7 +62,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 		}
 
 		<-sharersDone
-		s.JSON(w, http.StatusOK, Payload{
+		s.DumpJSON(w, http.StatusOK, Payload{
 			User:    publicUser(user),
 			Shares:  sharedUsers(user, shares),
 			Sharers: sharedUsers(user, sharers),
@@ -72,7 +73,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 func (s *Server) GetUserSharers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.GetUserSharers")
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 
 		sharers, err := s.DB.GetUserSharers(r.Context(), user)
 		if err != nil {
@@ -80,22 +81,59 @@ func (s *Server) GetUserSharers() http.HandlerFunc {
 			return
 		}
 
-		s.JSON(w, http.StatusOK, sharedUsers(user, sharers))
+		s.DumpJSON(w, http.StatusOK, sharedUsers(user, sharers))
 	}
 }
 
 func (s *Server) GetUserShares() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.GetUserShares")
-		user, _ := model.UserFromContext(r.Context())
 
+		user := model.UserFromContext(r.Context())
 		shares, err := s.DB.GetUserShares(r.Context(), user)
 		if err != nil {
 			s.Error(w, err, http.StatusInternalServerError, "Failed to get queue shares")
 			return
 		}
 
-		s.JSON(w, http.StatusOK, sharedUsers(user, shares))
+		s.DumpJSON(w, http.StatusOK, sharedUsers(user, shares))
+	}
+}
+
+var fields = []string{
+	"stay_active",
+	"phone_number",
+}
+
+func (s *Server) UserUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println("server.UserUpdate")
+
+		var requestUpdates map[string]interface{}
+		if !s.ParseJSON(w, r, &requestUpdates) {
+			return
+		}
+
+		var dbUpdates []firestore.Update
+		for _, field := range fields {
+			value, entryExists := requestUpdates[field]
+			if !entryExists {
+				continue
+			}
+
+			dbUpdates = append(dbUpdates, firestore.Update{Path: field, Value: value})
+		}
+
+		if len(dbUpdates) == 0 {
+			s.Error(w, errors.New("no valid updates provided"), http.StatusBadRequest, "No valid updates provided")
+			return
+		}
+
+		user := model.UserFromContext(r.Context())
+		if err := s.DB.Update(r.Context(), user, dbUpdates...); err != nil {
+			s.Error(w, err, http.StatusInternalServerError, "Failed to update user")
+			return
+		}
 	}
 }
 
@@ -103,7 +141,7 @@ func (s *Server) SetShareEnabled() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.SetShareEnabled")
 
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 		shareID := mux.Vars(r)["user_id"]
 		enabled := r.URL.Query().Get("enabled") == "true"
 
@@ -122,48 +160,11 @@ func (s *Server) SetShareEnabled() http.HandlerFunc {
 	}
 }
 
-func (s *Server) SetStayActive() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.SetStayActive")
-
-		user, _ := model.UserFromContext(r.Context())
-		stayActive := r.URL.Query().Get("stay_active") == "true"
-		update := firestore.Update{Path: "stay_active", Value: stayActive}
-		if err := s.DB.Update(r.Context(), user, update); err != nil {
-			s.Error(w, err, http.StatusInternalServerError, "Failed to update queue share setting")
-			return
-		}
-
-		enabledString := "enabled"
-		if !stayActive {
-			enabledString = "disabled"
-		}
-
-		s.Message(w, http.StatusOK, "Stay active %s", enabledString)
-	}
-}
-
-func (s *Server) SetPhoneNumber() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.SetPhoneNumber")
-
-		user, _ := model.UserFromContext(r.Context())
-		phoneNumber := r.URL.Query().Get("phone_number")
-		update := firestore.Update{Path: "phone_number", Value: phoneNumber}
-		if err := s.DB.Update(r.Context(), user, update); err != nil {
-			s.Error(w, err, http.StatusInternalServerError, "Failed to update phone number")
-			return
-		}
-
-		s.Message(w, http.StatusOK, "Phone number updated to \"%s\"", phoneNumber)
-	}
-}
-
 func (s *Server) PingUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.PingUser")
 
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 		updates := []firestore.Update{{Path: "last_ping", Value: time.Now()}}
 		if _, err := s.DB.Collection(model.CollectionUsers).Doc(user.ID).Update(r.Context(), updates); err != nil {
 			s.Error(w, err, http.StatusInternalServerError, "failed to ping user")
@@ -177,7 +178,7 @@ func (s *Server) PingUser() http.HandlerFunc {
 			}
 		}()
 
-		s.JSON(w, http.StatusOK, publicUser(user))
+		s.DumpJSON(w, http.StatusOK, publicUser(user))
 	}
 }
 

@@ -98,7 +98,6 @@ func (u *User) Context(parent context.Context) context.Context {
 	return context.WithValue(parent, userContextK, u)
 }
 
-func UserFromContext(ctx context.Context) (*User, bool) {
-	user, ok := ctx.Value(userContextK).(*User)
-	return user, ok
+func UserFromContext(ctx context.Context) *User {
+	return ctx.Value(userContextK).(*User)
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -59,13 +60,28 @@ func (s *Server) Error(w http.ResponseWriter, err error, code int, format string
 }
 
 func (s *Server) Message(w http.ResponseWriter, code int, format string, a ...interface{}) {
-	s.JSON(w, code, map[string]string{"message": fmt.Sprintf(format, a...)})
+	s.DumpJSON(w, code, map[string]string{"message": fmt.Sprintf(format, a...)})
 }
 
-func (s *Server) JSON(w http.ResponseWriter, code int, data interface{}) {
+func (s *Server) DumpJSON(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		s.Error(w, err, http.StatusInternalServerError, err.Error())
 	}
+}
+
+func (s *Server) ParseJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		s.Error(w, err, http.StatusInternalServerError, "")
+		return false
+	}
+
+	if err := json.Unmarshal(data, v); err != nil {
+		s.Error(w, err, http.StatusBadRequest, "")
+		return false
+	}
+
+	return true
 }

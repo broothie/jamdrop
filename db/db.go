@@ -87,8 +87,7 @@ func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) 
 		return errors.Wrapf(err, "failed to update record; collection: %s, id: %s", collection, m.GetID())
 	}
 
-	m.SetUpdatedAt(updatedAt)
-	return nil
+	return db.Get(ctx, m.GetID(), m)
 }
 
 func (db *DB) Get(ctx context.Context, id string, m Model) error {

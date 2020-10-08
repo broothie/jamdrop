@@ -20,7 +20,7 @@ func (s *Server) Routes() http.Handler {
 	root.
 		Methods(http.MethodGet).
 		Path("/build_info").
-		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { s.JSON(w, http.StatusOK, s.App.BuildInfo) })
+		HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { s.DumpJSON(w, http.StatusOK, s.App.BuildInfo) })
 
 	// Spotify auth endpoints
 	spotify := root.PathPrefix("/spotify").Subrouter()
@@ -67,13 +67,8 @@ func (s *Server) Routes() http.Handler {
 
 	users.
 		Methods(http.MethodPatch).
-		Path("/me/stay_active").
-		Handler(s.SetStayActive())
-
-	users.
-		Methods(http.MethodPatch).
-		Path("/me/phone_number").
-		Handler(s.SetPhoneNumber())
+		Path("/me").
+		Handler(s.UserUpdate())
 
 	users.
 		Methods(http.MethodGet).

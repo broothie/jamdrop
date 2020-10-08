@@ -19,7 +19,7 @@ func (s *Server) Share() http.HandlerFunc {
 			return
 		}
 
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 		nameChan := make(chan string)
 		go func() {
 			defer close(nameChan)

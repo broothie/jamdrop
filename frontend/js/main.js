@@ -55,7 +55,7 @@ export const Settings = (vnode) => {
 
             const setStayActive = () => {
                 stayActiveDisabled = true;
-                api.setStayActive(!stayActive)
+                api.updateUser({ stay_active: !stayActive })
                     .then(() => stayActive = !stayActive)
                     .then(m.redraw);
             };
@@ -64,7 +64,7 @@ export const Settings = (vnode) => {
                 const newPhoneNumber = event.target.value;
 
                 phoneNumberDisabled = true;
-                api.setPhoneNumber(newPhoneNumber)
+                api.updateUser({ phone_number: newPhoneNumber })
                     .then(() => phoneNumber = newPhoneNumber)
                     .then(m.redraw);
             };

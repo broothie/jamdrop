@@ -23,14 +23,8 @@ export const setEnabled = (user_id, enabled) => m.request({
     params: { user_id, enabled }
 });
 
-export const setStayActive = (stay_active) => m.request({
+export const updateUser = (updates) => m.request({
     method: 'patch',
-    url: '/api/users/me/stay_active',
-    params: { stay_active }
-});
-
-export const setPhoneNumber = (phone_number) => m.request({
-    method: 'patch',
-    url: '/api/users/me/phone_number',
-    params: { phone_number }
+    url: '/api/users/me',
+    body: updates
 });

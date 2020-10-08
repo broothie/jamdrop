@@ -17,7 +17,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println("server.QueueSong")
 
-		user, _ := model.UserFromContext(r.Context())
+		user := model.UserFromContext(r.Context())
 		targetUserID := mux.Vars(r)["user_id"]
 		targetUser := new(model.User)
 		if err := s.DB.Get(r.Context(), targetUserID, targetUser); err != nil {
