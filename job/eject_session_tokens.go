@@ -4,17 +4,8 @@ import (
 	"context"
 	"time"
 
-	"jamdrop/app"
 	"jamdrop/model"
 )
-
-type Job struct {
-	*app.App
-}
-
-func New(app *app.App) *Job {
-	return &Job{App: app}
-}
 
 func (j *Job) EjectSessionTokens(ctx context.Context) error {
 	j.Logger.Println("job.EjectSessionTokens")

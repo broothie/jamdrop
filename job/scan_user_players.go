@@ -55,6 +55,11 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 	wg.Wait()
 
 	if _, err := batch.Commit(ctx); err != nil {
+		if err.Error() == "firestore: cannot commit empty WriteBatch" {
+			j.Logger.Println("empty batch")
+			return nil
+		}
+
 		j.Logger.Println("error committing batch", err)
 		return err
 	}
