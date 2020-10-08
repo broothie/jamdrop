@@ -1,8 +1,9 @@
 import m from 'mithril';
 import * as api from "./api";
+import toaster from "./toaster";
 
 export const Sharers = (vnode) => {
-    let { sharers, messenger } = vnode.attrs;
+    let { sharers } = vnode.attrs;
 
     setInterval(() => {
         api.getSharers()
@@ -19,8 +20,8 @@ export const Sharers = (vnode) => {
             return sharers.length > 0 && m('.sharers-container',
                 m('.sharers-header', m('p.title', '↓ drop a jam')),
                 m('.sharers', [
-                    ...enabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger})),
-                    ...disabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer, messenger}))
+                    ...enabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer})),
+                    ...disabledSharers.map((sharer) => m(Sharer, {key: sharer.id, sharer}))
                 ]),
             );
         }
@@ -28,7 +29,7 @@ export const Sharers = (vnode) => {
 };
 
 export const Sharer = (vnode) => {
-    const { sharer, messenger } = vnode.attrs;
+    const { sharer } = vnode.attrs;
     const ondragstart = (event) => {
         event.dataTransfer.setData('text/plain', sharer.id);
     };
@@ -39,8 +40,8 @@ export const Sharer = (vnode) => {
         const songIdentifier = event.dataTransfer.getData('text/plain');
 
         api.queueSong(sharer.id, songIdentifier)
-            .then((res) => messenger.setMessage(res.message))
-            .catch((e) => messenger.setError(e.response.error));
+            .then((res) => toaster.setMessage(res.message))
+            .catch((e) => toaster.setError(e.response.error));
     };
 
     return {

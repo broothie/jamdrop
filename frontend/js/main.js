@@ -3,42 +3,24 @@ import {Sharers} from "./sharers";
 import {Shares} from "./shares";
 import jam from '../img/jam.svg';
 import * as api from "./api";
+import toaster from "./toaster";
 
 export const Main = (vnode) => {
     const { userData } = vnode.attrs;
     const user = userData.user;
 
-    const messenger = {
-        message: null,
-        setEl(el, time = 5) {
-            this.message = el;
-            m.redraw();
-
-            setTimeout(() => {
-                this.message = null;
-                m.redraw();
-            }, time * 1000);
-        },
-        setMessage(message, time = 5) {
-            this.setEl(m('p.toast.message', message), time);
-        },
-        setError(error, time = 5) {
-            this.setEl(m('p.toast.error', error), time);
-        }
-    };
-
     return {
         view: () => m('main',
             m('.welcome',
                 m('.logo', m('img', {src: jam}), m('p', 'JamDrop')),
-                messenger.message,
+                toaster.message,
                 m('.user',
                     m('p', `Hi, ${user.name} 👋`),
                     m(Settings, {user})
                 )
             ),
-            m(Sharers, {sharers: userData.sharers, messenger}),
-            m(Shares, {shares: userData.shares, messenger}),
+            m(Sharers, {sharers: userData.sharers}),
+            m(Shares, {shares: userData.shares}),
         )
     };
 };

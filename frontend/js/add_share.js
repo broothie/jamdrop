@@ -1,8 +1,9 @@
 import m from 'mithril';
 import * as api from "./api";
+import toaster from "./toaster";
 
 export const AddShare = (vnode) => {
-    const { reload, messenger } = vnode.attrs;
+    const { reload } = vnode.attrs;
 
     const ondrop = (event) => {
         event.preventDefault();
@@ -10,7 +11,7 @@ export const AddShare = (vnode) => {
 
         api.addShare(userIdentifier)
             .then(reload)
-            .catch((e) => messenger.setError(e.response.error));
+            .catch((e) => toaster.setError(e.response.error));
     };
 
     const ondragover = (event) => {
