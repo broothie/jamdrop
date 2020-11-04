@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"jamdrop/logger"
 	"jamdrop/model"
 
 	"cloud.google.com/go/firestore"
@@ -11,7 +12,7 @@ import (
 )
 
 func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string) error {
-	db.Logger.Println("db.AddShare", user.ID, shareUserID)
+	db.Logger.Info("db.AddShare", logger.Fields{"user_id": user.ID, "share_user_id": shareUserID})
 
 	shareUserExists, err := db.Exists(ctx, model.CollectionUsers, shareUserID)
 	if err != nil {
@@ -34,7 +35,7 @@ func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string
 
 // Get users this user has shared their queue with
 func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Println("db.GetUserShares", user.ID)
+	db.Logger.Info("db.GetUserShares", logger.Fields{"user_id": user.ID})
 
 	userCollection := db.Collection(model.CollectionUsers)
 	shareDocRefs := make([]*firestore.DocumentRef, len(user.Shares))
@@ -53,7 +54,7 @@ func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.Use
 	for _, doc := range shareDocs {
 		share := new(model.User)
 		if err := doc.DataTo(share); err != nil {
-			db.Logger.Println("failed to read followee data", doc.Data())
+			db.Logger.Err(err, "failed to read followee data", logger.Fields{"data": doc.Data()})
 		}
 
 		shares = append(shares, share)
@@ -63,7 +64,7 @@ func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.Use
 }
 
 func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Println("db.GetUserSharers", user.ID)
+	db.Logger.Info("db.GetUserSharers", logger.Field("user_id", user.ID))
 
 	docs, err := db.
 		Collection(model.CollectionUsers).
@@ -78,7 +79,7 @@ func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.Us
 	for _, doc := range docs {
 		sharer := new(model.User)
 		if err := doc.DataTo(sharer); err != nil {
-			db.Logger.Printf("failed to read sharer data; user_id: %s, error: %v\n", user.ID, err)
+			db.Logger.Err(err, "failed to read sharer data", logger.Field("user_id", user.ID))
 		}
 
 		sharers = append(sharers, sharer)
@@ -88,7 +89,7 @@ func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.Us
 }
 
 func (db *DB) AddSongQueuedEvent(ctx context.Context, user *model.User, event model.QueuedSongEvent) error {
-	db.Logger.Println("db.AddSongQueuedEvent", user.ID)
+	db.Logger.Info("db.AddSongQueuedEvent", logger.Field("user_id", user.ID))
 
 	user.QueuedSongEvents = append(user.QueuedSongEvents, event)
 	if err := db.Update(ctx, user, firestore.Update{Path: "queued_song_events", Value: user.QueuedSongEvents}); err != nil {

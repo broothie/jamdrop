@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"jamdrop/logger"
 	"net/http"
 
 	"jamdrop/db"
@@ -30,7 +31,7 @@ func (s *Server) LogInUser(ctx context.Context, w http.ResponseWriter, r *http.R
 }
 
 func (s *Server) LogIn(w http.ResponseWriter, r *http.Request, token string) bool {
-	s.Logger.Println("setting cookie", token)
+	s.Logger.Info("setting cookie", logger.Field("token", token))
 	session, _ := s.Sessions.Get(r, sessionName)
 	session.Values[sessionTokenName] = token
 	if err := session.Save(r, w); err != nil {
@@ -42,7 +43,7 @@ func (s *Server) LogIn(w http.ResponseWriter, r *http.Request, token string) boo
 }
 
 func (s *Server) LogOut(w http.ResponseWriter, r *http.Request) bool {
-	s.Logger.Println("removing cookie")
+	s.Logger.Info("removing cookie")
 	session, _ := s.Sessions.Get(r, sessionName)
 	delete(session.Values, sessionTokenName)
 	if err := session.Save(r, w); err != nil {
@@ -58,7 +59,7 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 		session, _ := s.Sessions.Get(r, sessionName)
 		token := session.Values[sessionTokenName]
 		if token == nil {
-			s.Logger.Println("no session token")
+			s.Logger.Info("no session token")
 			s.SpotifyAuthorizeRedirect(w, r)
 			return
 		}
@@ -66,13 +67,13 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 		user, err := s.DB.GetUserBySessionToken(r.Context(), token.(string))
 		if err != nil {
 			if db.IsNotFound(err) {
-				s.Logger.Println("no user for session_token", token)
+				s.Logger.Info("no user for session_token", logger.Field("token", token))
 				s.SpotifyAuthorizeRedirect(w, r)
 				return
 			}
 
 			if model.IsExpiredSessionTokenError(err) {
-				s.Logger.Println("session_token expired", token)
+				s.Logger.Info("session_token expired", logger.Field("token", token))
 				s.LogOut(w, r)
 				s.SpotifyAuthorizeRedirect(w, r)
 				return
@@ -85,7 +86,7 @@ func (s *Server) RequireLoggedIn(next http.Handler) http.Handler {
 		go func() {
 			sessionToken := &model.SessionToken{Base: model.Base{ID: token.(string)}}
 			if err := s.DB.Touch(context.Background(), sessionToken); err != nil {
-				s.Logger.Printf("failed to touch session_token; id: %v: %v\n", token, err)
+				s.Logger.Err(err, "failed to touch session_token", logger.Field("token", token))
 			}
 		}()
 

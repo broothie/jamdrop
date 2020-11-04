@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	"jamdrop/logger"
 	"net/http"
 	"time"
 )
@@ -27,11 +27,11 @@ func (lr *loggerRecorder) Write(body []byte) (int, error) {
 	return lr.ResponseWriter.Write(body)
 }
 
-func ApplyLoggerMiddleware(next http.Handler, logger *log.Logger) http.Handler {
+func ApplyLoggerMiddleware(next http.Handler, logger *logger.Logger) http.Handler {
 	return LoggerMiddleware(logger)(next)
 }
 
-func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
+func LoggerMiddleware(logger *logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestSize := r.ContentLength
@@ -51,7 +51,7 @@ func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 			elapsed := time.Since(before)
 
 			// Log after
-			logger.Printf("%s %s%s %dB | %d %s %dB | %v\n",
+			logger.Info(fmt.Sprintf("%s %s%s %dB | %d %s %dB | %v\n",
 				// Request
 				r.Method,
 				r.URL.Path,
@@ -63,7 +63,7 @@ func LoggerMiddleware(logger *log.Logger) func(http.Handler) http.Handler {
 				recorder.bodyLength,
 				// Timing
 				elapsed,
-			)
+			))
 		})
 	}
 }

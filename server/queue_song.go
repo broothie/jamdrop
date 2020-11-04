@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"jamdrop/logger"
 	"net/http"
 
 	"jamdrop/model"
@@ -15,7 +16,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 	const failureMessage = "There was a problem queueing the requested song"
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.QueueSong")
+		s.Logger.Info("server.QueueSong")
 
 		user := model.UserFromContext(r.Context())
 		targetUserID := mux.Vars(r)["user_id"]
@@ -39,7 +40,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 
 			songData, err := s.Spotify.GetSongData(user, songIdentifier)
 			if err != nil {
-				s.Logger.Println("failed to get song data", err)
+				s.Logger.Err(err, "failed to get song data")
 				songNameChan <- "Song"
 				return
 			}
@@ -58,11 +59,11 @@ func (s *Server) QueueSong() http.HandlerFunc {
 			if targetUser.IsActive() {
 				event := model.QueuedSongEvent{SongName: songName, UserName: user.DisplayName}
 				if err := s.DB.AddSongQueuedEvent(context.Background(), targetUser, event); err != nil {
-					s.Logger.Println("failed to add song queued event", err)
+					s.Logger.Err(err, "failed to add song queued event")
 				}
 			} else if targetUser.StayActive {
 				if err := s.Twilio.SongQueued(user, targetUser, songName); err != nil {
-					s.Logger.Printf("failed to send sms to user; user_id: %s; %v\n", user.ID, err)
+					s.Logger.Err(err, "failed to send sms to user", logger.Field("user_id", user.ID))
 				}
 			}
 		}()

@@ -22,7 +22,7 @@ func (s *Server) SpotifyAuthorize() http.HandlerFunc {
 		session, _ := s.Sessions.Get(r, sessionName)
 		session.Values["state"] = state
 		if err := session.Save(r, w); err != nil {
-			s.Logger.Println(err)
+			s.Logger.Err(err, "failed to save session")
 			s.SpotifyAuthorizeRedirect(w, r)
 			return
 		}
@@ -33,20 +33,20 @@ func (s *Server) SpotifyAuthorize() http.HandlerFunc {
 
 func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.SpotifyAuthorizeCallback")
+		s.Logger.Info("server.SpotifyAuthorizeCallback")
 		defer http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 
 		urlState := r.URL.Query().Get("state")
 		session, _ := s.Sessions.Get(r, sessionName)
 		sessionState, ok := session.Values["state"].(string)
 		if !ok {
-			s.Logger.Println("failed to get state from session")
+			s.Logger.Info("failed to get state from session")
 			s.SpotifyAuthorizeFailureRedirect(w, r)
 			return
 		}
 
 		if urlState != sessionState {
-			s.Logger.Println("states do not match")
+			s.Logger.Info("states do not match")
 			s.SpotifyAuthorizeFailureRedirect(w, r)
 			return
 		}
@@ -54,13 +54,13 @@ func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 		code := r.URL.Query().Get("code")
 		user, err := s.Spotify.UserFromAuthorizationCode(r.Context(), code)
 		if err != nil {
-			s.Logger.Println(err)
+			s.Logger.Err(err, "failed to get user from authorization code")
 			s.SpotifyAuthorizeFailureRedirect(w, r)
 			return
 		}
 
 		if err := s.LogInUser(r.Context(), w, r, user); err != nil {
-			s.Logger.Println(err)
+			s.Logger.Err(err, "failed to log in user")
 			s.SpotifyAuthorizeFailureRedirect(w, r)
 		}
 	}
@@ -81,7 +81,7 @@ func (s *Server) randCode() string {
 	for i := 0; i < size; i++ {
 		index, err := cryptorand.Int(cryptorand.Reader, big.NewInt(int64(len(alphabet))))
 		if err != nil {
-			s.Logger.Println("randCode", err)
+			s.Logger.Err(err, "randCode")
 			runes[i] = rune(alphabet[mathrand.Intn(len(alphabet))])
 			continue
 		}

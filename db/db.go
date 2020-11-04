@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
+	"jamdrop/logger"
 	"time"
 
 	"jamdrop/config"
@@ -17,10 +17,10 @@ import (
 type DB struct {
 	*firestore.Client
 	Config *config.Config
-	Logger *log.Logger
+	Logger *logger.Logger
 }
 
-func New(cfg *config.Config, logger *log.Logger) (*DB, error) {
+func New(cfg *config.Config, logger *logger.Logger) (*DB, error) {
 	var options []option.ClientOption
 	if !cfg.IsProduction() {
 		options = append(options, option.WithCredentialsFile("gcloud-key.json"))
@@ -51,7 +51,7 @@ type Model interface {
 func (db *DB) Create(ctx context.Context, m Model) error {
 	now := time.Now()
 	collection := db.fullCollectionName(m)
-	db.Logger.Println("db.Create", collection)
+	db.Logger.Info("db.Create", logger.Fields{"collection": collection})
 
 	m.SetCreatedAt(now)
 	m.SetUpdatedAt(now)
@@ -73,13 +73,13 @@ func (db *DB) Create(ctx context.Context, m Model) error {
 }
 
 func (db *DB) Touch(ctx context.Context, m Model) error {
-	db.Logger.Println("db.Touch", db.fullCollectionName(m), m.GetID())
+	db.Logger.Info("db.Touch", logger.Fields{"collection": db.fullCollectionName(m), "id": m.GetID()})
 	return db.Update(ctx, m)
 }
 
 func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) error {
 	collection := db.fullCollectionName(m)
-	db.Logger.Println("db.Update", collection, m.GetID())
+	db.Logger.Info("db.Update", logger.Fields{"collection": collection, "id": m.GetID()})
 
 	updatedAt := time.Now()
 	updates = append(updates, firestore.Update{Path: "updated_at", Value: updatedAt})
@@ -92,7 +92,7 @@ func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) 
 
 func (db *DB) Get(ctx context.Context, id string, m Model) error {
 	collection := db.fullCollectionName(m)
-	db.Logger.Println("db.Get", collection, id)
+	db.Logger.Info("db.Get", logger.Fields{"collection": collection, "id": id})
 
 	doc, err := db.Collection(m).Doc(id).Get(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (db *DB) Get(ctx context.Context, id string, m Model) error {
 }
 
 func (db *DB) Exists(ctx context.Context, collection model.Collection, id string) (bool, error) {
-	db.Logger.Println("db.Exists", db.fullCollectionName(collection), id)
+	db.Logger.Info("db.Exists", logger.Fields{"collection": db.fullCollectionName(collection), "id": id})
 
 	_, err := db.Collection(collection).Doc(id).Get(ctx)
 	if err != nil {

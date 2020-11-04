@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"jamdrop/logger"
 	"net/http"
 
 	"jamdrop/app"
@@ -17,7 +17,7 @@ import (
 
 type Server struct {
 	App      *app.App
-	Logger   *log.Logger
+	Logger   *logger.Logger
 	Spotify  *spotify.Client
 	DB       *db.DB
 	Sessions *sessions.CookieStore
@@ -40,8 +40,8 @@ func Run(app *app.App) {
 }
 
 func (s *Server) Run() {
-	s.Logger.Printf("serving @ %s", s.App.Config.BaseURL())
-	s.Logger.Panic(http.ListenAndServe(fmt.Sprintf(":%s", s.App.Config.Port), s.Handler()))
+	s.Logger.Info(fmt.Sprintf("serving @ %s", s.App.Config.BaseURL()))
+	s.Logger.Err(http.ListenAndServe(fmt.Sprintf(":%s", s.App.Config.Port), s.Handler()), "server panicked")
 }
 
 func (s *Server) Handler() http.Handler {
@@ -49,13 +49,13 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) Error(w http.ResponseWriter, err error, code int, format string, a ...interface{}) {
-	s.Logger.Println(err)
+	s.Logger.Err(err, "server.Error")
 
-	error := fmt.Sprintf(format, a...)
+	errorMessage := fmt.Sprintf(format, a...)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(map[string]string{"error": error}); err != nil {
-		http.Error(w, error, http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": errorMessage}); err != nil {
+		http.Error(w, errorMessage, http.StatusInternalServerError)
 	}
 }
 

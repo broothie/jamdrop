@@ -10,7 +10,7 @@ import (
 
 func (s *Server) Share() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.Share")
+		s.Logger.Info("server.Share")
 
 		shareUserIdentifier := r.URL.Query().Get("user_identifier")
 		shareUserID, err := spotify.IDFromIdentifier(shareUserIdentifier)
@@ -26,7 +26,7 @@ func (s *Server) Share() http.HandlerFunc {
 
 			shareUser, err := s.Spotify.GetUserByID(user, shareUserID)
 			if err != nil {
-				s.Logger.Println(err)
+				s.Logger.Err(err, "failed to get share user by id")
 				nameChan <- "user"
 				return
 			}

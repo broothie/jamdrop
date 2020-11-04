@@ -2,9 +2,8 @@ package twilio
 
 import (
 	"fmt"
-	"log"
-
 	"jamdrop/config"
+	"jamdrop/logger"
 	"jamdrop/model"
 
 	"github.com/kevinburke/twilio-go"
@@ -15,10 +14,10 @@ const fromNumber = "+19382014947"
 
 type Twilio struct {
 	*twilio.Client
-	Logger *log.Logger
+	Logger *logger.Logger
 }
 
-func New(cfg *config.Config, logger *log.Logger) *Twilio {
+func New(cfg *config.Config, logger *logger.Logger) *Twilio {
 	return &Twilio{
 		Client: twilio.NewClient(cfg.TwilioAccountSID, cfg.TwilioAuthToken, nil),
 		Logger: logger,
@@ -26,10 +25,10 @@ func New(cfg *config.Config, logger *log.Logger) *Twilio {
 }
 
 func (t *Twilio) SongQueued(user, targetUser *model.User, songName string) error {
-	t.Logger.Println("twilio.SongQueued", user.ID, targetUser.ID, songName)
+	t.Logger.Info("twilio.SongQueued", logger.Fields{"user_id": user.ID, "target_user_id": targetUser.ID, "song_name": songName})
 
 	if targetUser.PhoneNumber == "" {
-		t.Logger.Println("user does not have a phone number; user_id", targetUser.ID)
+		t.Logger.Info("user does not have a phone number", logger.Fields{"target_user_id": targetUser.ID})
 		return nil
 	}
 
