@@ -54,7 +54,7 @@ func LoggerMiddleware(logger *logger.Logger) func(http.Handler) http.Handler {
 
 			// Log after
 			logger.Info(
-				fmt.Sprintf("%s %s%s %dB | %d %s %dB | %v\n",
+				fmt.Sprintf("%s %s%s %dB | %d %s %dB | %v",
 					// Request
 					r.Method,
 					r.URL.Path,
