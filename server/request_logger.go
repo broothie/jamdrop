@@ -2,9 +2,11 @@ package server
 
 import (
 	"fmt"
-	"jamdrop/logger"
+	"jamdrop/requestid"
 	"net/http"
 	"time"
+
+	"jamdrop/logger"
 )
 
 type loggerRecorder struct {
@@ -51,19 +53,22 @@ func LoggerMiddleware(logger *logger.Logger) func(http.Handler) http.Handler {
 			elapsed := time.Since(before)
 
 			// Log after
-			logger.Info(fmt.Sprintf("%s %s%s %dB | %d %s %dB | %v\n",
-				// Request
-				r.Method,
-				r.URL.Path,
-				query,
-				requestSize,
-				//Response
-				recorder.status,
-				http.StatusText(recorder.status),
-				recorder.bodyLength,
-				// Timing
-				elapsed,
-			))
+			logger.Info(
+				fmt.Sprintf("%s %s%s %dB | %d %s %dB | %v\n",
+					// Request
+					r.Method,
+					r.URL.Path,
+					query,
+					requestSize,
+					//Response
+					recorder.status,
+					http.StatusText(recorder.status),
+					recorder.bodyLength,
+					// Timing
+					elapsed,
+				),
+				requestid.Log(r),
+			)
 		})
 	}
 }

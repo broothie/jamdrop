@@ -2,11 +2,12 @@ package job
 
 import (
 	"context"
-	"jamdrop/logger"
 	"sync"
 	"time"
 
+	"jamdrop/logger"
 	"jamdrop/model"
+	"jamdrop/requestid"
 
 	"cloud.google.com/go/firestore"
 )
@@ -30,13 +31,13 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 			for doc := range docChan {
 				user := new(model.User)
 				if err := doc.DataTo(user); err != nil {
-					j.Logger.Err(err, "failed to read user data", logger.Fields{"user_id": doc.Ref.ID})
+					j.Logger.Err(err, "failed to read user data", logger.Fields{"user_id": doc.Ref.ID}, requestid.LogContext(ctx))
 					continue
 				}
 
 				isPlaying, err := j.Spotify.GetCurrentlyPlaying(user)
 				if err != nil {
-					j.Logger.Err(err, "failed to get currently playing", logger.Fields{
+					j.Logger.Err(err, "failed to get currently playing", requestid.LogContext(ctx), logger.Fields{
 						"user_id":      user.ID,
 						"access_token": user.AccessToken,
 					})

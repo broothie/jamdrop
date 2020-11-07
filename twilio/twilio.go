@@ -1,10 +1,12 @@
 package twilio
 
 import (
+	"context"
 	"fmt"
 	"jamdrop/config"
 	"jamdrop/logger"
 	"jamdrop/model"
+	"jamdrop/requestid"
 
 	"github.com/kevinburke/twilio-go"
 	"github.com/pkg/errors"
@@ -24,8 +26,8 @@ func New(cfg *config.Config, logger *logger.Logger) *Twilio {
 	}
 }
 
-func (t *Twilio) SongQueued(user, targetUser *model.User, songName string) error {
-	t.Logger.Debug("twilio.SongQueued", logger.Fields{"user_id": user.ID, "target_user_id": targetUser.ID, "song_name": songName})
+func (t *Twilio) SongQueued(ctx context.Context, user, targetUser *model.User, songName string) error {
+	t.Logger.Debug("twilio.SongQueued", logger.Fields{"user_id": user.ID, "target_user_id": targetUser.ID, "song_name": songName}, requestid.LogContext(ctx))
 
 	if targetUser.PhoneNumber == "" {
 		t.Logger.Info("user does not have a phone number", logger.Fields{"target_user_id": targetUser.ID})

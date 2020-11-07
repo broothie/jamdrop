@@ -22,15 +22,15 @@ func Field(key string, value interface{}) Fields {
 }
 
 type Item struct {
-	Level   Level
-	Message string
-	Fields  []Fieldser
-	Time    time.Time
+	Level     Level
+	Message   string
+	Fields    []Fieldser
+	Timestamp time.Time
 }
 
 func (l *Logger) Log(level Level, message string, fields ...Fieldser) {
 	now := time.Now().UTC()
-	go func() { l.itemChan <- Item{Level: level, Message: message, Fields: fields, Time: now} }()
+	go func() { l.itemChan <- Item{Level: level, Message: message, Fields: fields, Timestamp: now} }()
 }
 
 func (l *Logger) Err(err error, message string, fields ...Fieldser) {
@@ -54,7 +54,7 @@ func (l *Logger) worker() {
 
 		payload["message"] = item.Message
 		payload["level"] = strings.ToLower(item.Level.String())
-		payload["time"] = item.Time.Format(l.TimeFormat)
+		payload["time"] = item.Timestamp.Format(l.TimeFormat)
 		if err := json.NewEncoder(l.Writer).Encode(payload); err != nil {
 			fmt.Printf("failed to encode payload: payload: %v, error: %s\n", payload, err)
 			return
