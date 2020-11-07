@@ -3,18 +3,18 @@ package spotify
 import (
 	"jamdrop/config"
 	"jamdrop/db"
-	"log"
+	"jamdrop/logger"
 )
 
 type Client struct {
 	ClientID     string
 	ClientSecret string
 	BaseURL      string
-	Logger       *log.Logger
+	Logger       *logger.Logger
 	DB           *db.DB
 }
 
-func New(cfg *config.Config, db *db.DB, logger *log.Logger) *Client {
+func New(cfg *config.Config, db *db.DB, logger *logger.Logger) *Client {
 	return &Client{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifyClientSecret,

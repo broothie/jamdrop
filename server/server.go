@@ -3,12 +3,12 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 
 	"jamdrop/app"
 	"jamdrop/db"
+	"jamdrop/logger"
+	"jamdrop/requestid"
 	"jamdrop/spotify"
 	"jamdrop/twilio"
 
@@ -17,7 +17,7 @@ import (
 
 type Server struct {
 	App      *app.App
-	Logger   *log.Logger
+	Logger   *logger.Logger
 	Spotify  *spotify.Client
 	DB       *db.DB
 	Sessions *sessions.CookieStore
@@ -40,22 +40,22 @@ func Run(app *app.App) {
 }
 
 func (s *Server) Run() {
-	s.Logger.Printf("serving @ %s", s.App.Config.BaseURL())
-	s.Logger.Panic(http.ListenAndServe(fmt.Sprintf(":%s", s.App.Config.Port), s.Handler()))
+	s.Logger.Info(fmt.Sprintf("serving @ %s", s.App.Config.BaseURL()))
+	s.Logger.Err(http.ListenAndServe(fmt.Sprintf(":%s", s.App.Config.Port), s.Handler()), "server panicked")
 }
 
 func (s *Server) Handler() http.Handler {
-	return ApplyLoggerMiddleware(s.Routes(), s.Logger)
+	return requestid.Middleware(ApplyLoggerMiddleware(s.Routes(), s.Logger))
 }
 
 func (s *Server) Error(w http.ResponseWriter, err error, code int, format string, a ...interface{}) {
-	s.Logger.Println(err)
+	s.Logger.Err(err, "server.Error")
 
-	error := fmt.Sprintf(format, a...)
+	errorMessage := fmt.Sprintf(format, a...)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(map[string]string{"error": error}); err != nil {
-		http.Error(w, error, http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": errorMessage}); err != nil {
+		http.Error(w, errorMessage, http.StatusInternalServerError)
 	}
 }
 
@@ -72,13 +72,7 @@ func (s *Server) DumpJSON(w http.ResponseWriter, code int, data interface{}) {
 }
 
 func (s *Server) ParseJSON(w http.ResponseWriter, r *http.Request, v interface{}) bool {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		s.Error(w, err, http.StatusInternalServerError, "")
-		return false
-	}
-
-	if err := json.Unmarshal(data, v); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
 		s.Error(w, err, http.StatusBadRequest, "")
 		return false
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"jamdrop/logger"
 	"net/http"
 	"time"
 
@@ -39,7 +40,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.GetUser")
+		s.Logger.Debug("server.GetUser")
 		user := model.UserFromContext(r.Context())
 
 		var sharers []*model.User
@@ -49,7 +50,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 			users, err := s.DB.GetUserSharers(r.Context(), user)
 			if err != nil {
-				s.Logger.Println(err)
+				s.Logger.Err(err, "failed to get user sharers")
 				return
 			}
 
@@ -58,7 +59,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 		shares, err := s.DB.GetUserShares(r.Context(), user)
 		if err != nil {
-			s.Logger.Println(err)
+			s.Logger.Err(err, "failed to get user shares")
 		}
 
 		<-sharersDone
@@ -72,7 +73,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 func (s *Server) GetUserSharers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.GetUserSharers")
+		s.Logger.Debug("server.GetUserSharers")
 		user := model.UserFromContext(r.Context())
 
 		sharers, err := s.DB.GetUserSharers(r.Context(), user)
@@ -87,7 +88,7 @@ func (s *Server) GetUserSharers() http.HandlerFunc {
 
 func (s *Server) GetUserShares() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.GetUserShares")
+		s.Logger.Debug("server.GetUserShares")
 
 		user := model.UserFromContext(r.Context())
 		shares, err := s.DB.GetUserShares(r.Context(), user)
@@ -100,14 +101,11 @@ func (s *Server) GetUserShares() http.HandlerFunc {
 	}
 }
 
-var fields = []string{
-	"stay_active",
-	"phone_number",
-}
-
 func (s *Server) UserUpdate() http.HandlerFunc {
+	fields := []string{"stay_active", "phone_number"}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.UserUpdate")
+		s.Logger.Debug("server.UserUpdate")
 
 		var requestUpdates map[string]interface{}
 		if !s.ParseJSON(w, r, &requestUpdates) {
@@ -139,7 +137,7 @@ func (s *Server) UserUpdate() http.HandlerFunc {
 
 func (s *Server) SetShareEnabled() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.SetShareEnabled")
+		s.Logger.Debug("server.SetShareEnabled")
 
 		user := model.UserFromContext(r.Context())
 		shareID := mux.Vars(r)["user_id"]
@@ -162,7 +160,7 @@ func (s *Server) SetShareEnabled() http.HandlerFunc {
 
 func (s *Server) PingUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Println("server.PingUser")
+		s.Logger.Debug("server.PingUser")
 
 		user := model.UserFromContext(r.Context())
 		updates := []firestore.Update{{Path: "last_ping", Value: time.Now()}}
@@ -174,7 +172,7 @@ func (s *Server) PingUser() http.HandlerFunc {
 			user.QueuedSongEvents = []model.QueuedSongEvent{}
 			update := firestore.Update{Path: "queued_song_events", Value: user.QueuedSongEvents}
 			if err := s.DB.Update(context.Background(), user, update); err != nil {
-				s.Logger.Printf("failed to clear queued song events; user_id: %s; %v\n", user.ID, err)
+				s.Logger.Err(err, "failed to clear queued song events", logger.Field("user_id", user.ID))
 			}
 		}()
 

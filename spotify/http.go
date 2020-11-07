@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"jamdrop/logger"
 	"net/http"
 	"strings"
 
@@ -24,7 +25,7 @@ func accountsPath(path string, v ...interface{}) string {
 }
 
 func (s *Client) request(r *http.Request) (*http.Response, []byte, error) {
-	s.Logger.Printf("%s %s", r.Method, r.URL.String())
+	s.Logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.String()))
 
 	res, err := http.DefaultClient.Do(r)
 	if err != nil {
@@ -37,7 +38,7 @@ func (s *Client) request(r *http.Request) (*http.Response, []byte, error) {
 	}
 
 	if res.StatusCode < 200 || 299 < res.StatusCode {
-		s.Logger.Println("status", res.StatusCode)
+		s.Logger.Error("bad status", logger.Field("status", res.StatusCode))
 		var errRes errorResponse
 		if err := json.Unmarshal(body, &errRes); err != nil {
 			return nil, nil, errors.Wrap(err, "failed to unmarshal request response")

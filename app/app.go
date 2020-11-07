@@ -2,10 +2,10 @@ package app
 
 import (
 	"log"
-	"os"
 
 	"jamdrop/config"
 	"jamdrop/db"
+	"jamdrop/logger"
 	"jamdrop/spotify"
 	"jamdrop/twilio"
 
@@ -14,7 +14,7 @@ import (
 
 type App struct {
 	*config.Config
-	Logger  *log.Logger
+	Logger  *logger.Logger
 	Spotify *spotify.Client
 	DB      *db.DB
 	Twilio  *twilio.Twilio
@@ -26,7 +26,12 @@ func New(cfg *config.Config) (*App, error) {
 		logFlags |= log.LstdFlags
 	}
 
-	logger := log.New(os.Stdout, "[jamdrop] ", logFlags)
+	logLevel := logger.Info
+	if cfg.IsDevelopment() {
+		logLevel = logger.Debug
+	}
+
+	logger := logger.New(logger.ConfigureLevel(logLevel))
 	db, err := db.New(cfg, logger)
 	if err != nil {
 		return nil, errors.WithStack(err)

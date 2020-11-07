@@ -5,7 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"jamdrop/logger"
 	"jamdrop/model"
+	"jamdrop/requestid"
 
 	"cloud.google.com/go/firestore"
 )
@@ -29,13 +31,17 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 			for doc := range docChan {
 				user := new(model.User)
 				if err := doc.DataTo(user); err != nil {
-					j.Logger.Printf("failed to read user data; user_id: %s; %v\n", doc.Ref.ID, err)
+					j.Logger.Err(err, "failed to read user data", logger.Fields{"user_id": doc.Ref.ID}, requestid.LogContext(ctx))
 					continue
 				}
 
 				isPlaying, err := j.Spotify.GetCurrentlyPlaying(user)
 				if err != nil {
-					j.Logger.Printf("failed to get currently playing: user_id: %s, access_token: %s; %v\n", user.ID, user.AccessToken, err)
+					j.Logger.Err(err, "failed to get currently playing", requestid.LogContext(ctx), logger.Fields{
+						"user_id":      user.ID,
+						"access_token": user.AccessToken,
+					})
+
 					time.Sleep(10 * time.Millisecond)
 					continue
 				}
@@ -56,11 +62,11 @@ func (j *Job) ScanUserPlayers(ctx context.Context) error {
 
 	if _, err := batch.Commit(ctx); err != nil {
 		if err.Error() == "firestore: cannot commit empty WriteBatch" {
-			j.Logger.Println("empty batch")
+			j.Logger.Error("empty batch")
 			return nil
 		}
 
-		j.Logger.Println("error committing batch", err)
+		j.Logger.Err(err, "error committing batch")
 		return err
 	}
 
