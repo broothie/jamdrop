@@ -40,7 +40,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.GetUser")
+		s.Logger.Debug("server.GetUser")
 		user := model.UserFromContext(r.Context())
 
 		var sharers []*model.User
@@ -73,7 +73,7 @@ func (s *Server) GetUser() http.HandlerFunc {
 
 func (s *Server) GetUserSharers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.GetUserSharers")
+		s.Logger.Debug("server.GetUserSharers")
 		user := model.UserFromContext(r.Context())
 
 		sharers, err := s.DB.GetUserSharers(r.Context(), user)
@@ -88,7 +88,7 @@ func (s *Server) GetUserSharers() http.HandlerFunc {
 
 func (s *Server) GetUserShares() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.GetUserShares")
+		s.Logger.Debug("server.GetUserShares")
 
 		user := model.UserFromContext(r.Context())
 		shares, err := s.DB.GetUserShares(r.Context(), user)
@@ -105,7 +105,7 @@ func (s *Server) UserUpdate() http.HandlerFunc {
 	fields := []string{"stay_active", "phone_number"}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.UserUpdate")
+		s.Logger.Debug("server.UserUpdate")
 
 		var requestUpdates map[string]interface{}
 		if !s.ParseJSON(w, r, &requestUpdates) {
@@ -137,7 +137,7 @@ func (s *Server) UserUpdate() http.HandlerFunc {
 
 func (s *Server) SetShareEnabled() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.SetShareEnabled")
+		s.Logger.Debug("server.SetShareEnabled")
 
 		user := model.UserFromContext(r.Context())
 		shareID := mux.Vars(r)["user_id"]
@@ -160,7 +160,7 @@ func (s *Server) SetShareEnabled() http.HandlerFunc {
 
 func (s *Server) PingUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.PingUser")
+		s.Logger.Debug("server.PingUser")
 
 		user := model.UserFromContext(r.Context())
 		updates := []firestore.Update{{Path: "last_ping", Value: time.Now()}}

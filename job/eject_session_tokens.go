@@ -9,7 +9,7 @@ import (
 )
 
 func (j *Job) EjectSessionTokens(ctx context.Context) error {
-	j.Logger.Info("job.EjectSessionTokens")
+	j.Logger.Debug("job.EjectSessionTokens")
 
 	thirtyDaysAgo := time.Now().Add(-30 * 24 * time.Hour)
 	j.Logger.Info("deleting session tokens", logger.Fields{"updated_at before": thirtyDaysAgo})

@@ -34,7 +34,7 @@ func (s *Client) AuthRedirectURI() string {
 }
 
 func (s *Client) UserFromAuthorizationCode(ctx context.Context, code string) (*model.User, error) {
-	s.Logger.Info("spotify.UserFromAuthorizationCode", logger.Fields{"code": code})
+	s.Logger.Debug("spotify.UserFromAuthorizationCode", logger.Fields{"code": code})
 
 	user := new(model.User)
 	if err := s.setUserTokens(code, user); err != nil {
@@ -71,7 +71,7 @@ func (s *Client) UserFromAuthorizationCode(ctx context.Context, code string) (*m
 }
 
 func (s *Client) setUserTokens(code string, user *model.User) error {
-	s.Logger.Info("spotify.setUserTokens", logger.Fields{"code": code, "user_id": user.ID})
+	s.Logger.Debug("spotify.setUserTokens", logger.Fields{"code": code, "user_id": user.ID})
 
 	body := url.Values{
 		"grant_type":   {"authorization_code"},
@@ -95,7 +95,7 @@ func (s *Client) setUserTokens(code string, user *model.User) error {
 }
 
 func (s *Client) setUserData(accessToken string, user *model.User) error {
-	s.Logger.Info("spotify.setUserData", logger.Fields{"access_token": accessToken, "user_id": user.ID})
+	s.Logger.Debug("spotify.setUserData", logger.Fields{"access_token": accessToken, "user_id": user.ID})
 
 	req, err := http.NewRequest(http.MethodGet, apiPath("/v1/me"), nil)
 	if err != nil {
@@ -120,7 +120,7 @@ func (s *Client) refreshAccessTokenIfExpired(user *model.User) error {
 }
 
 func (s *Client) refreshAccessToken(user *model.User) error {
-	s.Logger.Info("spotify.refreshAccessToken", logger.Field("user_id", user.ID))
+	s.Logger.Debug("spotify.refreshAccessToken", logger.Field("user_id", user.ID))
 
 	body := url.Values{"grant_type": {"refresh_token"}, "refresh_token": {user.RefreshToken}}
 	req, err := http.NewRequest(http.MethodPost, accountsPath("/api/token"), bytes.NewBufferString(body.Encode()))

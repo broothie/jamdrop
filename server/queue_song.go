@@ -16,7 +16,7 @@ func (s *Server) QueueSong() http.HandlerFunc {
 	const failureMessage = "There was a problem queueing the requested song"
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.QueueSong")
+		s.Logger.Debug("server.QueueSong")
 
 		user := model.UserFromContext(r.Context())
 		targetUserID := mux.Vars(r)["user_id"]

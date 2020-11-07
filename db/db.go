@@ -51,7 +51,7 @@ type Model interface {
 func (db *DB) Create(ctx context.Context, m Model) error {
 	now := time.Now()
 	collection := db.fullCollectionName(m)
-	db.Logger.Info("db.Create", logger.Fields{"collection": collection})
+	db.Logger.Debug("db.Create", logger.Fields{"collection": collection})
 
 	m.SetCreatedAt(now)
 	m.SetUpdatedAt(now)
@@ -73,13 +73,13 @@ func (db *DB) Create(ctx context.Context, m Model) error {
 }
 
 func (db *DB) Touch(ctx context.Context, m Model) error {
-	db.Logger.Info("db.Touch", logger.Fields{"collection": db.fullCollectionName(m), "id": m.GetID()})
+	db.Logger.Debug("db.Touch", logger.Fields{"collection": db.fullCollectionName(m), "id": m.GetID()})
 	return db.Update(ctx, m)
 }
 
 func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) error {
 	collection := db.fullCollectionName(m)
-	db.Logger.Info("db.Update", logger.Fields{"collection": collection, "id": m.GetID()})
+	db.Logger.Debug("db.Update", logger.Fields{"collection": collection, "id": m.GetID()})
 
 	updatedAt := time.Now()
 	updates = append(updates, firestore.Update{Path: "updated_at", Value: updatedAt})
@@ -92,7 +92,7 @@ func (db *DB) Update(ctx context.Context, m Model, updates ...firestore.Update) 
 
 func (db *DB) Get(ctx context.Context, id string, m Model) error {
 	collection := db.fullCollectionName(m)
-	db.Logger.Info("db.Get", logger.Fields{"collection": collection, "id": id})
+	db.Logger.Debug("db.Get", logger.Fields{"collection": collection, "id": id})
 
 	doc, err := db.Collection(m).Doc(id).Get(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (db *DB) Get(ctx context.Context, id string, m Model) error {
 }
 
 func (db *DB) Exists(ctx context.Context, collection model.Collection, id string) (bool, error) {
-	db.Logger.Info("db.Exists", logger.Fields{"collection": db.fullCollectionName(collection), "id": id})
+	db.Logger.Debug("db.Exists", logger.Fields{"collection": db.fullCollectionName(collection), "id": id})
 
 	_, err := db.Collection(collection).Doc(id).Get(ctx)
 	if err != nil {

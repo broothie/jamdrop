@@ -25,7 +25,7 @@ func New(cfg *config.Config, logger *logger.Logger) *Twilio {
 }
 
 func (t *Twilio) SongQueued(user, targetUser *model.User, songName string) error {
-	t.Logger.Info("twilio.SongQueued", logger.Fields{"user_id": user.ID, "target_user_id": targetUser.ID, "song_name": songName})
+	t.Logger.Debug("twilio.SongQueued", logger.Fields{"user_id": user.ID, "target_user_id": targetUser.ID, "song_name": songName})
 
 	if targetUser.PhoneNumber == "" {
 		t.Logger.Info("user does not have a phone number", logger.Fields{"target_user_id": targetUser.ID})

@@ -33,7 +33,7 @@ func (s *Server) SpotifyAuthorize() http.HandlerFunc {
 
 func (s *Server) SpotifyAuthorizeCallback() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Logger.Info("server.SpotifyAuthorizeCallback")
+		s.Logger.Debug("server.SpotifyAuthorizeCallback")
 		defer http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 
 		urlState := r.URL.Query().Get("state")

@@ -12,7 +12,7 @@ import (
 )
 
 func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string) error {
-	db.Logger.Info("db.AddShare", logger.Fields{"user_id": user.ID, "share_user_id": shareUserID})
+	db.Logger.Debug("db.AddShare", logger.Fields{"user_id": user.ID, "share_user_id": shareUserID})
 
 	shareUserExists, err := db.Exists(ctx, model.CollectionUsers, shareUserID)
 	if err != nil {
@@ -35,7 +35,7 @@ func (db *DB) AddShare(ctx context.Context, user *model.User, shareUserID string
 
 // Get users this user has shared their queue with
 func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Info("db.GetUserShares", logger.Fields{"user_id": user.ID})
+	db.Logger.Debug("db.GetUserShares", logger.Fields{"user_id": user.ID})
 
 	userCollection := db.Collection(model.CollectionUsers)
 	shareDocRefs := make([]*firestore.DocumentRef, len(user.Shares))
@@ -64,7 +64,7 @@ func (db *DB) GetUserShares(ctx context.Context, user *model.User) ([]*model.Use
 }
 
 func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.User, error) {
-	db.Logger.Info("db.GetUserSharers", logger.Field("user_id", user.ID))
+	db.Logger.Debug("db.GetUserSharers", logger.Field("user_id", user.ID))
 
 	docs, err := db.
 		Collection(model.CollectionUsers).
@@ -89,7 +89,7 @@ func (db *DB) GetUserSharers(ctx context.Context, user *model.User) ([]*model.Us
 }
 
 func (db *DB) AddSongQueuedEvent(ctx context.Context, user *model.User, event model.QueuedSongEvent) error {
-	db.Logger.Info("db.AddSongQueuedEvent", logger.Field("user_id", user.ID))
+	db.Logger.Debug("db.AddSongQueuedEvent", logger.Field("user_id", user.ID))
 
 	user.QueuedSongEvents = append(user.QueuedSongEvents, event)
 	if err := db.Update(ctx, user, firestore.Update{Path: "queued_song_events", Value: user.QueuedSongEvents}); err != nil {

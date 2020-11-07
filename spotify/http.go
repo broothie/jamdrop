@@ -25,7 +25,7 @@ func accountsPath(path string, v ...interface{}) string {
 }
 
 func (s *Client) request(r *http.Request) (*http.Response, []byte, error) {
-	s.Logger.Info(fmt.Sprintf("%s %s", r.Method, r.URL.String()))
+	s.Logger.Debug(fmt.Sprintf("%s %s", r.Method, r.URL.String()))
 
 	res, err := http.DefaultClient.Do(r)
 	if err != nil {

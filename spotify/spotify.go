@@ -18,7 +18,7 @@ type SongData struct {
 }
 
 func (s *Client) GetUserByID(currentUser *model.User, otherUserID string) (*model.User, error) {
-	s.Logger.Info("spotify.GetUserByID", logger.Fields{"user_id": currentUser.ID, "other_user_id": otherUserID})
+	s.Logger.Debug("spotify.GetUserByID", logger.Fields{"user_id": currentUser.ID, "other_user_id": otherUserID})
 
 	if err := s.refreshAccessTokenIfExpired(currentUser); err != nil {
 		return nil, errors.Wrapf(err, "failed to refresh access token; user_id: %s", currentUser.ID)
@@ -40,7 +40,7 @@ func (s *Client) GetUserByID(currentUser *model.User, otherUserID string) (*mode
 }
 
 func (s *Client) GetSongData(user *model.User, songIdentifier string) (SongData, error) {
-	s.Logger.Info("spotify.GetSongData", logger.Fields{"user_id": user.ID, "song_identifier": songIdentifier})
+	s.Logger.Debug("spotify.GetSongData", logger.Fields{"user_id": user.ID, "song_identifier": songIdentifier})
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return SongData{}, err
@@ -66,7 +66,7 @@ func (s *Client) GetSongData(user *model.User, songIdentifier string) (SongData,
 }
 
 func (s *Client) QueueSong(user *model.User, songIdentifier string) error {
-	s.Logger.Info("spotify.QueueSong", logger.Fields{"user_id": user.ID, "song_identifier": songIdentifier})
+	s.Logger.Debug("spotify.QueueSong", logger.Fields{"user_id": user.ID, "song_identifier": songIdentifier})
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)
@@ -97,7 +97,7 @@ func (s *Client) QueueSong(user *model.User, songIdentifier string) error {
 }
 
 func (s *Client) setCurrentSong(user *model.User, songURI string) error {
-	s.Logger.Info("spotify.setCurrentSong", logger.Fields{"user_id": user.ID, "song_uri": songURI})
+	s.Logger.Debug("spotify.setCurrentSong", logger.Fields{"user_id": user.ID, "song_uri": songURI})
 
 	body := fmt.Sprintf(`{"uris":["%s"]}`, songURI)
 	req, err := http.NewRequest(http.MethodPut, apiPath("v1/me/player/play"), bytes.NewBufferString(body))
@@ -114,7 +114,7 @@ func (s *Client) setCurrentSong(user *model.User, songURI string) error {
 }
 
 func (s *Client) GetCurrentlyPlaying(user *model.User) (bool, error) {
-	s.Logger.Info("spotify.GetCurrentlyPlaying", logger.Field("user_id", user.ID))
+	s.Logger.Debug("spotify.GetCurrentlyPlaying", logger.Field("user_id", user.ID))
 
 	if err := s.refreshAccessTokenIfExpired(user); err != nil {
 		return false, errors.Wrapf(err, "failed to refresh access token; user_id: %s", user.ID)

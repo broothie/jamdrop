@@ -26,7 +26,12 @@ func New(cfg *config.Config) (*App, error) {
 		logFlags |= log.LstdFlags
 	}
 
-	logger := logger.New(logger.Info)
+	logLevel := logger.Info
+	if cfg.IsDevelopment() {
+		logLevel = logger.Debug
+	}
+
+	logger := logger.New(logger.ConfigureLevel(logLevel))
 	db, err := db.New(cfg, logger)
 	if err != nil {
 		return nil, errors.WithStack(err)
