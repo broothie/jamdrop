@@ -49,6 +49,8 @@ export const Sharer = (vnode) => {
     };
 
     const onclick = () => {
+        if (!sharer.droppable) return;
+
         const songIdentifier = window.prompt(`Paste a Spotify song ID or link here to drop it to ${sharer.name}'s queue`);
         if (songIdentifier) queueSong(songIdentifier);
     };
