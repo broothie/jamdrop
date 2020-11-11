@@ -34,14 +34,23 @@ export const Sharer = (vnode) => {
         event.dataTransfer.setData('text/plain', sharer.id);
     };
 
+    const queueSong = (songIdentifier) => {
+        api.queueSong(sharer.id, songIdentifier)
+            .then((res) => toaster.setMessage(res.message))
+            .catch((e) => toaster.setError(e.response.error));
+    };
+
     const ondrop = (event) => {
         event.preventDefault();
 
         const songIdentifier = event.dataTransfer.getData('text/plain');
 
-        api.queueSong(sharer.id, songIdentifier)
-            .then((res) => toaster.setMessage(res.message))
-            .catch((e) => toaster.setError(e.response.error));
+        queueSong(songIdentifier);
+    };
+
+    const onclick = () => {
+        const songIdentifier = window.prompt(`Paste a Spotify song ID or link here to drop it to ${sharer.name}'s queue`);
+        if (songIdentifier) queueSong(songIdentifier);
     };
 
     return {
@@ -63,7 +72,8 @@ export const Sharer = (vnode) => {
                     draggable: true,
                     ondragstart,
                     ondrop,
-                    ondragover
+                    ondragover,
+                    onclick
                 },
                 [
                     m('img.image', {src: sharer.image_url, draggable: false}),
