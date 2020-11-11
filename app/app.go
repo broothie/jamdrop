@@ -1,8 +1,6 @@
 package app
 
 import (
-	"log"
-
 	"jamdrop/config"
 	"jamdrop/db"
 	"jamdrop/logger"
@@ -21,11 +19,6 @@ type App struct {
 }
 
 func New(cfg *config.Config) (*App, error) {
-	logFlags := log.Lshortfile
-	if cfg.IsDevelopment() {
-		logFlags |= log.LstdFlags
-	}
-
 	logLevel := logger.Info
 	if cfg.IsDevelopment() {
 		logLevel = logger.Debug
