@@ -1,12 +1,15 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"jamdrop/app"
 	"jamdrop/db"
+	"jamdrop/job"
 	"jamdrop/logger"
 	"jamdrop/requestid"
 	"jamdrop/spotify"
@@ -40,6 +43,20 @@ func Run(app *app.App) {
 }
 
 func (s *Server) Run() {
+	if s.App.Config.IsDevelopment() {
+		go func() {
+			s.Logger.Info("starting user playing job ticker")
+			ticker := time.NewTicker(time.Minute)
+
+			for {
+				if err := job.New(s.App).ScanUserPlayers(context.Background()); err != nil {
+					s.Logger.Err(err, "failed to scan user players")
+				}
+				<-ticker.C
+			}
+		}()
+	}
+
 	s.Logger.Info(fmt.Sprintf("serving @ %s", s.App.Config.BaseURL()))
 	s.Logger.Err(http.ListenAndServe(fmt.Sprintf(":%s", s.App.Config.Port), s.Handler()), "server panicked")
 }
